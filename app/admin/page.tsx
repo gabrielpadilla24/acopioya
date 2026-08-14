@@ -1,21 +1,25 @@
 import { sql }               from '@/lib/db'
 import { RegenerarTokenForm } from './RegenerarTokenForm'
-import { CopiarLinkPanel }    from './CopiarLinkPanel'
+import { CrearAccesoForm, RegenerarAccesoForm } from './CoordAccesoAdmin'
 import { alternarActivo }     from './centros/actions'
 
 export const dynamic = 'force-dynamic'
 
 type CentroFila = {
-  id:              string
-  slug:            string
-  name:            string
-  city:            string
-  status:          'open' | 'full' | 'closed'
-  is_active:       boolean
-  admin_token:     string
-  verified_at:     Date | null
-  turnos_abiertos: number
-  inscripciones:   number
+  id:                  string
+  slug:                string
+  name:                string
+  city:                string
+  status:              'open' | 'full' | 'closed'
+  is_active:           boolean
+  admin_token:         string
+  verified_at:         Date | null
+  turnos_abiertos:     number
+  inscripciones:       number
+  coord_user_id:       string | null
+  coord_username:      string | null
+  coord_has_password:  boolean
+  coord_last_login_at: Date | null
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -47,18 +51,24 @@ export default async function AdminPage() {
       COUNT(DISTINCT sh.id) FILTER (
         WHERE sh.starts_at > now() AND sh.status = 'open'
       )::int AS turnos_abiertos,
-      COUNT(DISTINCT s.id)::int AS inscripciones
+      COUNT(DISTINCT s.id)::int AS inscripciones,
+      cu.id                        AS coord_user_id,
+      cu.username                  AS coord_username,
+      (cu.password_hash IS NOT NULL) AS coord_has_password,
+      cu.last_login_at             AS coord_last_login_at
     FROM centers c
     LEFT JOIN shifts  sh ON sh.center_id = c.id
     LEFT JOIN signups s  ON s.shift_id   = sh.id
+    LEFT JOIN coordinator_users cu ON cu.center_id = c.id AND cu.is_active = true
     GROUP BY
       c.id, c.slug, c.name, c.city, c.status,
-      c.is_active, c.admin_token, c.verified_at
+      c.is_active, c.admin_token, c.verified_at,
+      cu.id, cu.username, cu.password_hash, cu.last_login_at
     ORDER BY c.name
   `
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-6">
+    <main className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-950">Admin AcopioYA</h1>
         <div className="flex gap-2">
@@ -88,12 +98,12 @@ export default async function AdminPage() {
               <th className="px-3 py-3 font-semibold">Turnos</th>
               <th className="px-3 py-3 font-semibold">Inscritos</th>
               <th className="px-3 py-3 font-semibold">Verificado</th>
+              <th className="px-3 py-3 font-semibold">Coordinador</th>
               <th className="px-3 py-3 font-semibold">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
             {centros.map(c => {
-              const panelUrl = `${siteUrl}/panel/${c.admin_token}`
               return (
                 <tr key={c.id} className={c.is_active ? '' : 'bg-gray-50 text-gray-500'}>
                   <td className="px-3 py-3 font-medium text-gray-900">{c.name}</td>
@@ -105,6 +115,27 @@ export default async function AdminPage() {
                   <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">
                     {fmtBogota(c.verified_at)}
                   </td>
+
+                  {/* Columna coordinador */}
+                  <td className="px-3 py-3 min-w-[180px]">
+                    {c.coord_user_id && c.coord_username ? (
+                      <RegenerarAccesoForm
+                        centerId={c.id}
+                        userId={c.coord_user_id}
+                        username={c.coord_username}
+                        hasPassword={c.coord_has_password}
+                        lastLoginAt={c.coord_last_login_at}
+                        siteUrl={siteUrl}
+                      />
+                    ) : (
+                      <CrearAccesoForm
+                        centerId={c.id}
+                        slug={c.slug}
+                        siteUrl={siteUrl}
+                      />
+                    )}
+                  </td>
+
                   <td className="px-3 py-3">
                     <div className="flex flex-col gap-1 text-xs">
                       <a href={`/admin/centros/${c.id}`} className="text-blue-700 underline">
@@ -115,7 +146,6 @@ export default async function AdminPage() {
                           {c.is_active ? 'Desactivar' : 'Activar'}
                         </button>
                       </form>
-                      <CopiarLinkPanel url={panelUrl} />
                       <RegenerarTokenForm centerId={c.id} siteUrl={siteUrl} />
                     </div>
                   </td>

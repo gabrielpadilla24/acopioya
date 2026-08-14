@@ -128,162 +128,171 @@ export default async function CentroPage({ params }: Props) {
     <div className="flex flex-col min-h-screen">
       <Header />
 
-      <main className="flex-1 max-w-lg mx-auto w-full px-4 py-5">
+      <main className="flex-1 max-w-screen-xl mx-auto w-full px-4 lg:px-8 py-5">
 
         {/* Breadcrumb */}
         <a href="/" className="text-sm text-secondary hover:underline">
           ← Todos los centros
         </a>
 
-        {/* ── CABECERA DEL CENTRO ─────────────────────────── */}
-        <h1 className="text-2xl font-bold leading-tight text-on-surface mt-3">{centro.name}</h1>
+        {/* ── 2 columnas en desktop, 1 en móvil ──────────────────── */}
+        <div className="mt-4 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 items-start">
 
-        <span className={`inline-block mt-2 px-3 py-1.5 rounded text-sm font-bold ${statusUI.cls}`}>
-          {statusUI.badge}
-        </span>
+          {/* ── COLUMNA IZQUIERDA: info del centro + necesidades ──── */}
+          <div className="min-w-0">
 
-        {centro.schedule_note && (
-          <p className="mt-1.5 text-on-surface-variant text-sm">{centro.schedule_note}</p>
-        )}
+            <h1 className="text-2xl font-bold leading-tight text-on-surface">{centro.name}</h1>
 
-        <div className="mt-3 space-y-2">
-          <a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col justify-center w-full min-h-[48px]
-                       border border-outline-variant rounded bg-surface-container-lowest px-4 py-3"
-          >
-            <span className="font-medium text-on-surface">📍 {centro.address}, {centro.city}</span>
-            <span className="text-sm text-secondary">Abrir en Google Maps →</span>
-          </a>
+            <span className={`inline-block mt-2 px-3 py-1.5 rounded text-sm font-bold ${statusUI.cls}`}>
+              {statusUI.badge}
+            </span>
 
-          {centro.whatsapp_contact && (
-            <a
-              href={`https://wa.me/${centro.whatsapp_contact.replace('+', '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 min-h-[48px] w-full
-                         bg-tertiary text-on-tertiary font-bold rounded px-4"
-            >
-              💬 Contactar por WhatsApp
-            </a>
-          )}
-
-          {centro.coordinator_name && (
-            <p className="text-on-surface-variant text-sm">
-              Coordinador/a: <span className="font-medium text-on-surface">{centro.coordinator_name}</span>
-            </p>
-          )}
-        </div>
-
-        {/* ── NECESIDADES ─────────────────────────────────── */}
-        <section className="mt-5">
-          <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-lg font-bold text-on-surface">¿Qué llevar?</h2>
-            {maxNeedTs && (
-              <span className="text-sm font-semibold text-warning shrink-0">
-                Actualizado {haceCuanto(new Date(maxNeedTs))}
-              </span>
+            {centro.schedule_note && (
+              <p className="mt-1.5 text-on-surface-variant text-sm">{centro.schedule_note}</p>
             )}
+
+            <div className="mt-3 space-y-2">
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col justify-center w-full min-h-[48px]
+                           border border-outline-variant rounded bg-surface-container-lowest px-4 py-3"
+              >
+                <span className="font-medium text-on-surface">📍 {centro.address}, {centro.city}</span>
+                <span className="text-sm text-secondary">Abrir en Google Maps →</span>
+              </a>
+
+              {centro.whatsapp_contact && (
+                <a
+                  href={`https://wa.me/${centro.whatsapp_contact.replace('+', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 min-h-[48px] w-full
+                             bg-tertiary text-on-tertiary font-bold rounded px-4"
+                >
+                  💬 Contactar por WhatsApp
+                </a>
+              )}
+
+              {centro.coordinator_name && (
+                <p className="text-on-surface-variant text-sm">
+                  Coordinador/a: <span className="font-medium text-on-surface">{centro.coordinator_name}</span>
+                </p>
+              )}
+            </div>
+
+            {/* ── NECESIDADES ──────────────────────────────────────── */}
+            <section className="mt-6">
+              <div className="flex items-baseline justify-between gap-2">
+                <h2 className="text-lg font-bold text-on-surface">¿Qué llevar?</h2>
+                {maxNeedTs && (
+                  <span className="text-sm font-semibold text-warning shrink-0">
+                    Actualizado {haceCuanto(new Date(maxNeedTs))}
+                  </span>
+                )}
+              </div>
+
+              {grupos.length === 0 ? (
+                <p className="mt-2 text-on-surface-variant text-sm">
+                  Aún no hay información de necesidades publicada.
+                </p>
+              ) : (
+                <div className="mt-2 space-y-3">
+                  {grupos.map(({ nivel, items }) => {
+                    const { emoji, label } = NIVELES[nivel]
+                    const esNoTraer = nivel === 'do_not_bring'
+                    return (
+                      <div
+                        key={nivel}
+                        className={esNoTraer
+                          ? 'bg-error-container border border-error rounded p-3'
+                          : ''}
+                      >
+                        <p className="font-bold text-on-surface mb-1">
+                          {emoji} {label}
+                        </p>
+                        <ul className="space-y-0.5 pl-1">
+                          {items.map(n => (
+                            <li key={n.id} className="text-on-surface">
+                              {capitalizar(n.category)}
+                              {n.note && <span className="text-on-surface-variant text-sm"> — {n.note}</span>}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
           </div>
 
-          {grupos.length === 0 ? (
-            <p className="mt-2 text-on-surface-variant text-sm">
-              Aún no hay información de necesidades publicada.
-            </p>
-          ) : (
-            <div className="mt-2 space-y-3">
-              {grupos.map(({ nivel, items }) => {
-                const { emoji, label } = NIVELES[nivel]
-                const esNoTraer = nivel === 'do_not_bring'
-                return (
-                  <div
-                    key={nivel}
-                    className={esNoTraer
-                      ? 'bg-error-container border border-error rounded p-3'
-                      : ''}
-                  >
-                    <p className="font-bold text-on-surface mb-1">
-                      {emoji} {label}
-                    </p>
-                    <ul className="space-y-0.5 pl-1">
-                      {items.map(n => (
-                        <li key={n.id} className="text-on-surface">
-                          {capitalizar(n.category)}
-                          {n.note && <span className="text-on-surface-variant text-sm"> — {n.note}</span>}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </section>
+          {/* ── COLUMNA DERECHA: turnos ───────────────────────────── */}
+          <div className="min-w-0">
+            <section>
+              <h2 className="text-lg font-bold text-on-surface mb-3">Turnos de voluntariado</h2>
 
-        {/* ── TURNOS ──────────────────────────────────────── */}
-        <section className="mt-6">
-          <h2 className="text-lg font-bold text-on-surface mb-3">Turnos de voluntariado</h2>
+              {shifts.length === 0 ? (
+                <p className="text-on-surface-variant text-sm">
+                  No hay turnos disponibles en este momento. Vuelve a revisar pronto.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {shifts.map(s => {
+                    const lleno    = s.taken >= s.capacity
+                    const pct      = Math.min(100, Math.round((s.taken / s.capacity) * 100))
+                    const rolLabel = ROLES[s.role as Rol] ?? s.role
 
-          {shifts.length === 0 ? (
-            <p className="text-on-surface-variant text-sm">
-              No hay turnos disponibles en este momento. Vuelve a revisar pronto.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {shifts.map(s => {
-                const lleno    = s.taken >= s.capacity
-                const pct      = Math.min(100, Math.round((s.taken / s.capacity) * 100))
-                const rolLabel = ROLES[s.role as Rol] ?? s.role
+                    return (
+                      <div key={s.id} className="border border-outline-variant rounded p-4">
+                        <p className="font-bold text-on-surface">
+                          {rolLabel}
+                          {s.role_detail && (
+                            <span className="font-normal text-on-surface-variant"> — {s.role_detail}</span>
+                          )}
+                        </p>
 
-                return (
-                  <div key={s.id} className="border border-outline-variant rounded p-4">
-                    <p className="font-bold text-on-surface">
-                      {rolLabel}
-                      {s.role_detail && (
-                        <span className="font-normal text-on-surface-variant"> — {s.role_detail}</span>
-                      )}
-                    </p>
+                        <p className="text-on-surface text-sm mt-1">
+                          {etiquetaTurno(s.starts_at, s.ends_at)}
+                        </p>
 
-                    <p className="text-on-surface text-sm mt-1">
-                      {etiquetaTurno(s.starts_at, s.ends_at)}
-                    </p>
+                        <div className="mt-3">
+                          <div className="h-2 bg-surface-container rounded-full overflow-hidden">
+                            <div
+                              className={`h-2 rounded-full ${lleno ? 'bg-error' : 'bg-secondary'}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <p className="text-sm text-on-surface-variant mt-1">
+                            {s.taken} de {s.capacity} cupos ocupados
+                          </p>
+                        </div>
 
-                    <div className="mt-3">
-                      <div className="h-2 bg-surface-container rounded-full overflow-hidden">
-                        <div
-                          className={`h-2 rounded-full ${lleno ? 'bg-error' : 'bg-secondary'}`}
-                          style={{ width: `${pct}%` }}
-                        />
+                        <div className="mt-3">
+                          {lleno ? (
+                            <span className="inline-block px-3 py-1 bg-error-container text-error font-bold rounded text-sm">
+                              LLENO
+                            </span>
+                          ) : (
+                            <a
+                              href={`/c/${centro.slug}/turno/${s.id}`}
+                              className="flex items-center justify-center min-h-[44px] px-4
+                                         bg-secondary text-on-primary font-bold rounded text-center"
+                            >
+                              Inscribirme →
+                            </a>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-sm text-on-surface-variant mt-1">
-                        {s.taken} de {s.capacity} cupos ocupados
-                      </p>
-                    </div>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
 
-                    <div className="mt-3">
-                      {lleno ? (
-                        <span className="inline-block px-3 py-1 bg-error-container text-error font-bold rounded text-sm">
-                          LLENO
-                        </span>
-                      ) : (
-                        <a
-                          href={`/c/${centro.slug}/turno/${s.id}`}
-                          className="flex items-center justify-center min-h-[44px] px-4
-                                     bg-secondary text-on-primary font-bold rounded text-center"
-                        >
-                          Inscribirme →
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </section>
-
+        </div>
       </main>
 
       <Footer />

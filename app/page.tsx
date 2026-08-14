@@ -83,7 +83,12 @@ export default async function HomePage() {
     <div className="flex flex-col min-h-screen">
 
       {/* ── HEADER: banner + nav ─────────────────────────────────── */}
-      <div className="sticky top-0 z-50 shadow-sm">
+      {/*
+        z-[1100]: Leaflet asigna z-index hasta 1000 (.leaflet-top/.leaflet-control).
+        El header debe estar por encima de todo lo de Leaflet.
+        shrink-0: evita que el sticky se encoja en un flex-col container.
+      */}
+      <div className="sticky top-0 z-[1100] shrink-0 shadow-sm">
         <div
           role="status"
           className="bg-primary text-on-primary text-center py-2 px-4 text-sm font-medium"
@@ -122,8 +127,12 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Right: map */}
-          <div className="w-full h-[300px] lg:h-[450px] rounded overflow-hidden border border-outline-variant">
+          {/* Right: map
+              isolate: crea un stacking context propio para que las capas de
+              Leaflet (z-index hasta 1000) no escapen al root y tapen el header.
+              overflow-hidden: recorta los tiles en las esquinas redondeadas.
+          */}
+          <div className="isolate w-full h-[300px] lg:h-[450px] rounded overflow-hidden border border-outline-variant">
             <MapaWrapper centros={centrosMapa} />
           </div>
         </section>
@@ -135,7 +144,7 @@ export default async function HomePage() {
           {centros.length === 0 ? (
             <p className="text-on-surface-variant">No hay centros activos en este momento.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {centros.map(c => (
                 <TarjetaCentro key={c.id} c={c} />
               ))}
