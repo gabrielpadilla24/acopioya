@@ -51,3 +51,25 @@ export function esHoy(d: Date): boolean {
   })
   return fmt.format(d) === fmt.format(new Date())
 }
+
+export function esMañana(d: Date): boolean {
+  const fmt = new Intl.DateTimeFormat(LOCALE, {
+    timeZone: TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+  // Bogotá no tiene horario de verano: +24 h siempre es el día siguiente allí
+  return fmt.format(d) === fmt.format(new Date(Date.now() + 86_400_000))
+}
+
+export function formatearFecha(d: Date): string {
+  const parts = new Intl.DateTimeFormat(LOCALE, {
+    timeZone: TZ,
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).formatToParts(d)
+  const get = (t: string) => parts.find(p => p.type === t)?.value ?? ''
+  return `${get('weekday')} ${get('day')} ${get('month')}`
+}

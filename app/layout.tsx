@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://acopioya.vercel.app'),
   title: "AcopioYA",
   description: "Centros de acopio: qué llevar y dónde ayudar.",
 };
