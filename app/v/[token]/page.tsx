@@ -70,8 +70,8 @@ export default async function GestionarPage({ params, searchParams }: Props) {
           </div>
         )}
 
-        {/* ── Estado: CONFIRMADO ───────────────────────────────── */}
-        {sg.state === 'confirmado' && (
+        {/* ── Estado: CONFIRMADO o INSCRITO (inscrito = confirmado con modelo anterior) */}
+        {(sg.state === 'confirmado' || sg.state === 'inscrito') && (
           <div>
             <div className="bg-tertiary-container border border-tertiary rounded p-4">
               <p className="font-bold text-on-tertiary-container text-lg">Tu cupo está confirmado</p>
@@ -125,6 +125,26 @@ export default async function GestionarPage({ params, searchParams }: Props) {
           <div className="bg-tertiary-container border border-tertiary rounded p-6 text-center">
             <p className="text-2xl font-bold text-on-surface">¡Gracias por ayudar!</p>
             <p className="text-on-surface-variant mt-2 text-sm">Tu participación hace la diferencia.</p>
+          </div>
+        )}
+
+        {/* ── Caso por defecto: estado no contemplado ───────────── */}
+        {sg.state !== 'confirmado' &&
+         sg.state !== 'inscrito'  &&
+         sg.state !== 'cancelado' &&
+         sg.state !== 'liberado'  &&
+         sg.state !== 'asistio'   && (
+          <div>
+            <div className="bg-surface-container border border-outline-variant rounded p-4">
+              <p className="font-bold text-on-surface">Tu inscripción está registrada.</p>
+              <p className="text-on-surface-variant text-sm mt-1">
+                {formatearHora(inicio)} en {sg.center_address}.
+              </p>
+            </div>
+            <p className="mt-4 text-sm text-on-surface-variant">
+              Si no puedes ir, cancela para que otra persona pueda tomarlo.
+            </p>
+            {botonCancelar}
           </div>
         )}
 
