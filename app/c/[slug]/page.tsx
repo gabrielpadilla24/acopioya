@@ -1,9 +1,59 @@
 export const revalidate = 30
 
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { obtenerCentroPorSlug, listarSlugsActivos, type Need } from '@/lib/queries'
 import { NIVELES, ROLES, type Nivel, type Rol } from '@/lib/constants'
 import { esHoy, esMañana, rangoHorario, haceCuanto, formatearFecha } from '@/lib/time'
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const centro = await obtenerCentroPorSlug(slug)
+
+  if (!centro) {
+    return {
+      title: 'Centro no encontrado — AcopioYA',
+      description: 'Centros de acopio: qué llevar y dónde ayudar.',
+    }
+  }
+
+  const urgentes = centro.needs
+    .filter(n => n.level === 'urgent')
+    .map(n => n.category)
+
+  const turnosConCupo = centro.shifts.filter(s => s.taken < s.capacity).length
+
+  let description: string
+  if (urgentes.length > 0) {
+    const listaUrgentes = urgentes.slice(0, 4).join(', ')
+    const sufTurnos = turnosConCupo === 1
+      ? '1 turno con cupo'
+      : turnosConCupo > 1
+        ? `${turnosConCupo} turnos con cupo`
+        : ''
+    description = `Urgente: ${listaUrgentes}.${sufTurnos ? ` ${sufTurnos}.` : ''}`
+  } else {
+    const ESTADO: Record<string, string> = { open: 'Abierto', full: 'Lleno', closed: 'Cerrado' }
+    const sufTurnos = turnosConCupo > 0 ? ` ${turnosConCupo} turnos con cupo.` : ''
+    description = `${ESTADO[centro.status] ?? 'Centro'} en ${centro.city}.${sufTurnos}`
+  }
+
+  description = description.slice(0, 160)
+
+  return {
+    title: `${centro.name} — AcopioYA`,
+    description,
+    openGraph: {
+      title: centro.name,
+      description,
+      images: [`/c/${slug}/opengraph-image`],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+    },
+  }
+}
 
 // dynamicParams = true (default): slugs no listados se renderizan on-demand
 export async function generateStaticParams() {
