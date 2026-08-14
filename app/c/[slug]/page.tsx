@@ -1,9 +1,15 @@
 export const revalidate = 30
 
 import { notFound } from 'next/navigation'
-import { obtenerCentroPorSlug, type Need } from '@/lib/queries'
+import { obtenerCentroPorSlug, listarSlugsActivos, type Need } from '@/lib/queries'
 import { NIVELES, ROLES, type Nivel, type Rol } from '@/lib/constants'
 import { esHoy, esMañana, rangoHorario, haceCuanto, formatearFecha } from '@/lib/time'
+
+// dynamicParams = true (default): slugs no listados se renderizan on-demand
+export async function generateStaticParams() {
+  const centers = await listarSlugsActivos()
+  return centers.map(c => ({ slug: c.slug }))
+}
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -14,6 +20,10 @@ const STATUS_UI = {
 } as const
 
 const NIVEL_ORDEN: Nivel[] = ['urgent', 'needed', 'do_not_bring', 'enough']
+
+function capitalizar(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
 
 function etiquetaTurno(starts_at: Date, ends_at: Date): string {
   const inicio = new Date(starts_at)
@@ -53,52 +63,54 @@ export default async function CentroPage({ params }: Props) {
   const grupos = agruparNecesidades(needs)
 
   return (
-    <main className="max-w-lg mx-auto px-4 py-6">
+    <main className="max-w-lg mx-auto px-4 py-3">
 
       {/* ── HEADER ──────────────────────────────────── */}
-      <h1 className="text-3xl font-bold leading-tight text-gray-950">{centro.name}</h1>
+      <h1 className="text-2xl font-bold leading-tight text-gray-950">{centro.name}</h1>
 
-      <span className={`inline-block mt-3 px-4 py-2 rounded-lg text-base font-bold ${statusUI.cls}`}>
+      <span className={`inline-block mt-2 px-3 py-1.5 rounded-lg text-sm font-bold ${statusUI.cls}`}>
         {statusUI.badge}
       </span>
 
-      <div className="mt-4 space-y-2">
+      {centro.schedule_note && (
+        <p className="mt-1.5 text-gray-700 text-sm">{centro.schedule_note}</p>
+      )}
+
+      <div className="mt-3 space-y-2">
         <a
           href={mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 min-h-[44px] text-blue-700 underline font-medium"
+          className="flex flex-col justify-center w-full min-h-[48px]
+                     border border-gray-300 rounded-lg bg-white px-4 py-3"
         >
-          📍 {centro.address}, {centro.city}
+          <span className="font-medium text-gray-900">📍 {centro.address}, {centro.city}</span>
+          <span className="text-sm text-blue-700">Abrir en Google Maps →</span>
         </a>
-
-        {centro.schedule_note && (
-          <p className="text-gray-800 text-sm">{centro.schedule_note}</p>
-        )}
 
         {centro.whatsapp_contact && (
           <a
             href={`https://wa.me/${centro.whatsapp_contact.replace('+', '')}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 min-h-[44px] w-full
-                       bg-green-700 text-white font-bold rounded-lg mt-4 px-4"
+            className="flex items-center justify-center gap-2 min-h-[48px] w-full
+                       bg-green-700 text-white font-bold rounded-lg px-4"
           >
             💬 Contactar por WhatsApp
           </a>
         )}
 
         {centro.coordinator_name && (
-          <p className="text-gray-700 text-sm mt-2">
+          <p className="text-gray-700 text-sm">
             Coordinador/a: <span className="font-medium">{centro.coordinator_name}</span>
           </p>
         )}
       </div>
 
       {/* ── NECESIDADES ─────────────────────────────── */}
-      <section className="mt-8">
+      <section className="mt-5">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-xl font-bold text-gray-950">¿Qué llevar?</h2>
+          <h2 className="text-lg font-bold text-gray-950">¿Qué llevar?</h2>
           {maxNeedTs && (
             <span className="text-sm font-semibold text-orange-700 shrink-0">
               Actualizado {haceCuanto(new Date(maxNeedTs))}
@@ -107,22 +119,28 @@ export default async function CentroPage({ params }: Props) {
         </div>
 
         {grupos.length === 0 ? (
-          <p className="mt-3 text-gray-700 text-sm">
+          <p className="mt-2 text-gray-700 text-sm">
             Aún no hay información de necesidades publicada.
           </p>
         ) : (
-          <div className="mt-4 space-y-5">
+          <div className="mt-2 space-y-3">
             {grupos.map(({ nivel, items }) => {
               const { emoji, label } = NIVELES[nivel]
+              const esNoTraer = nivel === 'do_not_bring'
               return (
-                <div key={nivel}>
+                <div
+                  key={nivel}
+                  className={esNoTraer
+                    ? 'bg-red-50 border border-red-300 rounded-lg p-3'
+                    : ''}
+                >
                   <p className="font-bold text-gray-900 mb-1">
                     {emoji} {label}
                   </p>
-                  <ul className="space-y-1 pl-1">
+                  <ul className="space-y-0.5 pl-1">
                     {items.map(n => (
                       <li key={n.id} className="text-gray-800">
-                        {n.category}
+                        {capitalizar(n.category)}
                         {n.note && <span className="text-gray-600 text-sm"> — {n.note}</span>}
                       </li>
                     ))}
@@ -135,18 +153,18 @@ export default async function CentroPage({ params }: Props) {
       </section>
 
       {/* ── TURNOS ──────────────────────────────────── */}
-      <section className="mt-10">
-        <h2 className="text-xl font-bold text-gray-950 mb-4">Turnos de voluntariado</h2>
+      <section className="mt-6">
+        <h2 className="text-lg font-bold text-gray-950 mb-3">Turnos de voluntariado</h2>
 
         {shifts.length === 0 ? (
           <p className="text-gray-700 text-sm">
             No hay turnos disponibles en este momento. Vuelve a revisar pronto.
           </p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {shifts.map(s => {
-              const lleno   = s.taken >= s.capacity
-              const pct     = Math.min(100, Math.round((s.taken / s.capacity) * 100))
+              const lleno    = s.taken >= s.capacity
+              const pct      = Math.min(100, Math.round((s.taken / s.capacity) * 100))
               const rolLabel = ROLES[s.role as Rol] ?? s.role
 
               return (
@@ -162,7 +180,6 @@ export default async function CentroPage({ params }: Props) {
                     {etiquetaTurno(s.starts_at, s.ends_at)}
                   </p>
 
-                  {/* barra de progreso */}
                   <div className="mt-3">
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div

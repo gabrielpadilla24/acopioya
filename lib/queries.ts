@@ -42,6 +42,12 @@ export type CentroConDatos = Center & {
   shifts: Shift[]
 }
 
+export async function listarSlugsActivos(): Promise<{ slug: string }[]> {
+  return sql<{ slug: string }[]>`
+    SELECT slug FROM centers WHERE is_active = true
+  `
+}
+
 export async function obtenerCentroPorSlug(slug: string): Promise<CentroConDatos | null> {
   const centers = await sql<Center[]>`
     SELECT id, slug, name, address, city, status,

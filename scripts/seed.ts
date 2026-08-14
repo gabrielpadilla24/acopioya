@@ -59,6 +59,7 @@ const CENTERS = [
     status: 'open',
     coordinator_name: 'Ana Ramírez',
     admin_token: 'tk_demo1',
+    schedule_note: 'Lun a sáb, 7:00 a. m. – 8:00 p. m.',
     needs: [
       { category: 'agua',                           level: 'urgent' },
       { category: 'alimentos no perecederos',       level: 'needed' },
@@ -80,6 +81,7 @@ const CENTERS = [
     status: 'full',
     coordinator_name: 'Carlos Mejía',
     admin_token: 'tk_demo2',
+    schedule_note: 'Lun a sáb, 7:00 a. m. – 8:00 p. m.',
     needs: [
       { category: 'pañales',                 level: 'urgent' },
       { category: 'alimento para mascotas',  level: 'needed' },
@@ -100,16 +102,17 @@ const CENTERS = [
 async function seed() {
   for (const center of CENTERS) {
     const [row] = await sql<{ id: string; slug: string }[]>`
-      INSERT INTO centers (slug, name, address, city, status, coordinator_name, admin_token)
+      INSERT INTO centers (slug, name, address, city, status, coordinator_name, admin_token, schedule_note)
       VALUES (${center.slug}, ${center.name}, ${center.address}, ${center.city},
-              ${center.status}, ${center.coordinator_name}, ${center.admin_token})
+              ${center.status}, ${center.coordinator_name}, ${center.admin_token}, ${center.schedule_note})
       ON CONFLICT (slug) DO UPDATE SET
         name             = EXCLUDED.name,
         address          = EXCLUDED.address,
         city             = EXCLUDED.city,
         status           = EXCLUDED.status,
         coordinator_name = EXCLUDED.coordinator_name,
-        admin_token      = EXCLUDED.admin_token
+        admin_token      = EXCLUDED.admin_token,
+        schedule_note    = EXCLUDED.schedule_note
       RETURNING id, slug
     `
     const centerId: string = row.id
