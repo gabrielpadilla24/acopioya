@@ -80,6 +80,15 @@ function ShiftCard({
         )}
       </div>
 
+      <div className="mt-2">
+        <a
+          href={`/panel/${token}/turno/${shift.id}`}
+          className="text-xs text-blue-700 underline"
+        >
+          Ver inscritos →
+        </a>
+      </div>
+
       {!past && (
         <div className="flex gap-2 mt-3 flex-wrap">
           <form action={duplicarTurno.bind(null, token, shift.id)}>
@@ -171,14 +180,22 @@ export default async function PanelPage({ params, searchParams }: Props) {
           })}
         </div>
 
-        <a
-          href={`/c/${centro.slug}`}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="mt-3 inline-flex items-center gap-1 text-blue-700 text-sm underline"
-        >
-          Ver página pública →
-        </a>
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+          <a
+            href={`/c/${centro.slug}`}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1 text-blue-700 text-sm underline"
+          >
+            Ver página pública →
+          </a>
+          <a
+            href={`/panel/${token}/afiche`}
+            className="inline-flex items-center gap-1 text-blue-700 text-sm underline"
+          >
+            📄 Afiche de check-in →
+          </a>
+        </div>
       </section>
 
       {/* ── NECESIDADES ────────────────────────────────────────────────────── */}
