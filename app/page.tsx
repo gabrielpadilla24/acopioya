@@ -139,7 +139,7 @@ export default async function HomePage() {
         </p>
         <p>
           ¿Coordinas un centro de acopio?{' '}
-          <a href="mailto:coordinacion@acopioya.co" className="underline text-blue-700">
+          <a href="mailto:gabrielpadillab03@gmail.com" className="underline text-blue-700">
             Escríbenos
           </a>
         </p>

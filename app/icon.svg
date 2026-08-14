@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- frente de la caja -->
+  <rect x="15" y="50" width="70" height="40" rx="3" fill="#1d4ed8"/>
+  <!-- tapa izquierda -->
+  <polygon points="15,50 50,40 50,22 15,32" fill="#2563eb"/>
+  <!-- tapa derecha -->
+  <polygon points="85,50 50,40 50,22 85,32" fill="#1e40af"/>
+  <!-- línea de apertura de tapa -->
+  <line x1="15" y1="50" x2="85" y2="50" stroke="#1e3a8a" stroke-width="2"/>
+  <!-- cinta central -->
+  <rect x="43" y="50" width="14" height="40" fill="#1e40af" opacity="0.5"/>
+  <rect x="43" y="22" width="14" height="28" fill="#1e3a8a" opacity="0.3"/>
+</svg>
