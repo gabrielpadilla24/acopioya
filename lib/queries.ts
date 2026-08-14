@@ -271,6 +271,78 @@ export async function obtenerCentroPorAdminToken(token: string): Promise<CentroP
   return { ...center, needs, shifts }
 }
 
+// ── tipos turno panel ─────────────────────────────────────────────────────────
+
+export type SignupParaPanel = {
+  id:             string
+  name:           string
+  phone:          string | null
+  state:          'inscrito' | 'confirmado' | 'cancelado' | 'liberado' | 'asistio'
+  manage_token:   string
+  created_at:     Date
+  checked_in_at:  Date | null
+  checkin_method: string | null
+  is_walk_in:     boolean
+}
+
+export type TurnoParaPanel = {
+  id:                 string
+  center_id:          string
+  role:               string
+  role_detail:        string | null
+  starts_at:          Date
+  ends_at:            Date
+  capacity:           number
+  overbook_pct:       number
+  taken:              number
+  status:             'open' | 'closed'
+  whatsapp_group_url: string | null
+  center_name:        string
+  center_slug:        string
+  center_status:      'open' | 'full' | 'closed'
+  signups:            SignupParaPanel[]
+}
+
+export async function obtenerTurnoParaPanel(
+  adminToken: string,
+  shiftId: string,
+): Promise<TurnoParaPanel | null> {
+  const shifts = await sql<Omit<TurnoParaPanel, 'signups'>[]>`
+    SELECT
+      sh.id, sh.center_id, sh.role, sh.role_detail,
+      sh.starts_at, sh.ends_at, sh.capacity, sh.overbook_pct, sh.taken,
+      sh.status, sh.whatsapp_group_url,
+      c.name   AS center_name,
+      c.slug   AS center_slug,
+      c.status AS center_status
+    FROM shifts sh
+    JOIN centers c ON c.id = sh.center_id
+    WHERE sh.id = ${shiftId}
+      AND c.admin_token = ${adminToken}
+      AND c.is_active   = true
+    LIMIT 1
+  `
+  if (shifts.length === 0) return null
+  const shift = shifts[0]
+
+  const signups = await sql<SignupParaPanel[]>`
+    SELECT id, name, phone, state, manage_token,
+           created_at, checked_in_at, checkin_method, is_walk_in
+    FROM signups
+    WHERE shift_id = ${shiftId}
+    ORDER BY CASE state
+      WHEN 'confirmado' THEN 1
+      WHEN 'inscrito'   THEN 2
+      WHEN 'asistio'    THEN 3
+      WHEN 'liberado'   THEN 4
+      WHEN 'cancelado'  THEN 5
+      ELSE 6
+    END, created_at
+  `
+
+  return { ...shift, signups }
+}
+
 // ── queries existentes ───────────────────────────────────────────────────────
 
 export async function obtenerCentroPorSlug(slug: string): Promise<CentroConDatos | null> {
