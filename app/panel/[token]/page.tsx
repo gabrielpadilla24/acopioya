@@ -206,6 +206,17 @@ export default async function PanelPage({ params, searchParams }: Props) {
             📄 Afiche de check-in →
           </a>
         </div>
+        <div className="mt-3">
+          <a
+            href={`/panel/${token}/export`}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-gray-700 rounded-lg min-h-[44px] hover:bg-gray-800"
+          >
+            ⬇ Descargar lista de inscritos (CSV)
+          </a>
+          <p className="text-xs text-gray-500 mt-1.5">
+            Guárdala en tu celular por si te quedas sin internet.
+          </p>
+        </div>
       </section>
 
       {/* ── NECESIDADES ────────────────────────────────────────────────────── */}
