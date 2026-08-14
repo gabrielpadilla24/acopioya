@@ -60,6 +60,28 @@ export default function FormInscripcion({ slug, shiftId }: { slug: string; shift
         <p className="mt-1 text-xs text-gray-600">Número colombiano, 10 dígitos, empieza por 3</p>
       </div>
 
+      <label className="flex items-start gap-3 min-h-[44px] cursor-pointer">
+        <input
+          type="checkbox"
+          name="privacidad"
+          required
+          className="mt-1 w-5 h-5 shrink-0 accent-blue-700"
+        />
+        <span className="text-sm text-gray-900 leading-snug">
+          Autorizo el uso de mi nombre y celular para coordinar el voluntariado.
+          Solo los ve el coordinador del centro. Se eliminan a los 90 días.{' '}
+          <a
+            href="/privacidad"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-blue-700"
+          >
+            Aviso de privacidad
+          </a>
+          .
+        </span>
+      </label>
+
       <button
         type="submit"
         disabled={pending}

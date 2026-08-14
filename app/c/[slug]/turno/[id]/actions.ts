@@ -20,6 +20,11 @@ export async function inscribir(
     redirect(`/c/${slug}/turno/${shiftId}/listo`)
   }
 
+  // Validate consent checkbox
+  if (formData.get('privacidad') !== 'on') {
+    return { error: 'Debes autorizar el uso de tus datos para inscribirte.' }
+  }
+
   // Validate nombre
   const nombre = (formData.get('nombre') as string ?? '').trim()
   if (!nombre || nombre.length < 2) {
