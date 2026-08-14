@@ -55,7 +55,7 @@ function ShiftCard({ shift, past }: { shift: ShiftConConteos; past?: boolean }) 
             {etiquetaDia(inicio)}, {rangoHorario(inicio, fin)}
           </p>
           <p className="text-on-surface-variant text-xs mt-1 tabular-nums">
-            {activos}/{maxCupos} cupos · {shift.confirmados} conf · {shift.inscritos} insc
+            {activos}/{maxCupos} cupos · {shift.confirmados} conf
             {shift.liberados  > 0 && <span> · {shift.liberados} lib</span>}
             {shift.asistieron > 0 && <span> · {shift.asistieron} asist.</span>}
           </p>

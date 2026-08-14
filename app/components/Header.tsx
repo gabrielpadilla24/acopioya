@@ -25,10 +25,10 @@ export default function Header({ variant = 'full' }: Props) {
                 Centros
               </a>
               <a
-                href="mailto:gabrielpadillab03@gmail.com?subject=Quiero%20registrar%20mi%20centro%20de%20acopio"
-                className="px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded min-h-[40px] flex items-center hover:bg-primary-container transition-colors"
+                href="/entrar"
+                className="px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded min-h-[40px] flex items-center hover:opacity-90 transition-opacity"
               >
-                Soy coordinador
+                Entrar
               </a>
             </div>
 
@@ -48,10 +48,10 @@ export default function Header({ variant = 'full' }: Props) {
                   Centros
                 </a>
                 <a
-                  href="mailto:gabrielpadillab03@gmail.com?subject=Quiero%20registrar%20mi%20centro%20de%20acopio"
+                  href="/entrar"
                   className="block py-2.5 px-3 text-sm font-bold text-on-primary bg-primary rounded min-h-[44px] flex items-center justify-center mt-2"
                 >
-                  Soy coordinador
+                  Entrar
                 </a>
               </div>
             </details>

@@ -68,7 +68,6 @@ export default async function MetricasPage() {
     `,
 
     // ── 2. Inscripciones por hora (últimas 24 h, hora de Bogotá) ─────────
-    // double AT TIME ZONE: timestamptz → Bogotá timestamp → truncar → timestamptz
     sql<BucketHora[]>`
       SELECT
         date_trunc('hour', sg.created_at AT TIME ZONE 'America/Bogota')
@@ -84,7 +83,6 @@ export default async function MetricasPage() {
     `,
 
     // ── 3. Por centro: walk-ins + última actualización de necesidades ─────
-    // Subqueries pre-agregadas para evitar el cross-product needs × signups
     sql<CentroMetricas[]>`
       SELECT
         c.id,
@@ -128,32 +126,31 @@ export default async function MetricasPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-6 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-950">Métricas</h1>
-        <a href="/admin" className="text-sm text-blue-700 underline">← Admin</a>
+      <div>
+        <h1 className="text-2xl font-bold text-on-surface">Métricas</h1>
+        <p className="text-xs text-on-surface-variant mt-1">
+          Solo centros activos. Actualizado en cada carga.
+        </p>
       </div>
-      <p className="text-xs text-gray-500 -mt-6">
-        Solo centros activos. Actualizado en cada carga.
-      </p>
 
       {/* ── INSCRIPCIONES ──────────────────────────────────────────────── */}
       <section>
-        <h2 className="text-lg font-bold text-gray-950 mb-3">Inscripciones</h2>
+        <h2 className="text-lg font-bold text-on-surface mb-3">Inscripciones</h2>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="border border-gray-200 rounded-xl p-4 bg-white">
-            <p className="text-4xl font-bold text-gray-950 tabular-nums">{m.total}</p>
-            <p className="text-sm text-gray-500 mt-1">Total</p>
+          <div className="border border-outline-variant p-4 bg-surface-container-lowest">
+            <p className="text-4xl font-bold text-on-surface tabular-nums font-mono">{m.total}</p>
+            <p className="text-sm text-on-surface-variant mt-1">Total</p>
           </div>
-          <div className="border border-gray-200 rounded-xl p-4 bg-white">
-            <p className="text-4xl font-bold text-gray-950 tabular-nums">{m.ultimas_24h}</p>
-            <p className="text-sm text-gray-500 mt-1">Últimas 24 h</p>
+          <div className="border border-outline-variant p-4 bg-surface-container-lowest">
+            <p className="text-4xl font-bold text-on-surface tabular-nums font-mono">{m.ultimas_24h}</p>
+            <p className="text-sm text-on-surface-variant mt-1">Últimas 24 h</p>
           </div>
         </div>
 
         {buckets.length > 0 ? (
-          <div className="mt-4 border border-gray-200 rounded-xl p-4 bg-white">
-            <p className="text-sm font-semibold text-gray-700 mb-3">
+          <div className="mt-4 border border-outline-variant p-4 bg-surface-container-lowest">
+            <p className="text-sm font-semibold text-on-surface mb-3">
               Por hora — últimas 24 h (hora Bogotá)
             </p>
             <div className="space-y-1.5">
@@ -161,16 +158,16 @@ export default async function MetricasPage() {
                 const pct = Math.round((b.conteo / maxBucket) * 100)
                 return (
                   <div key={new Date(b.hora_bogota).toISOString()} className="flex items-center gap-2 text-xs">
-                    <span className="w-12 text-gray-500 tabular-nums shrink-0">
+                    <span className="w-12 text-on-surface-variant tabular-nums font-mono shrink-0">
                       {fmtHora(new Date(b.hora_bogota))}
                     </span>
-                    <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden min-w-0">
+                    <div className="flex-1 bg-surface-container h-5 overflow-hidden min-w-0">
                       <div
-                        className="bg-blue-600 h-5 rounded-full"
+                        className="bg-secondary h-5"
                         style={{ width: `${Math.max(pct, 3)}%` }}
                       />
                     </div>
-                    <span className="w-5 tabular-nums text-gray-700 text-right shrink-0">
+                    <span className="w-5 tabular-nums font-mono text-on-surface text-right shrink-0">
                       {b.conteo}
                     </span>
                   </div>
@@ -179,45 +176,45 @@ export default async function MetricasPage() {
             </div>
           </div>
         ) : (
-          <p className="mt-3 text-sm text-gray-500">Sin inscripciones en las últimas 24 h.</p>
+          <p className="mt-3 text-sm text-on-surface-variant">Sin inscripciones en las últimas 24 h.</p>
         )}
       </section>
 
       {/* ── TASAS ──────────────────────────────────────────────────────── */}
       <section>
-        <h2 className="text-lg font-bold text-gray-950 mb-1">Tasas</h2>
-        <p className="text-xs text-gray-500 mb-3">
+        <h2 className="text-lg font-bold text-on-surface mb-1">Tasas</h2>
+        <p className="text-xs text-on-surface-variant mb-3">
           Confirmación: turnos ya iniciados, sin cancelados.
           Asistencia: confirmados de turnos ya terminados.
         </p>
         <div className="grid grid-cols-2 gap-4">
-          <div className="border border-gray-200 rounded-xl p-4 bg-white">
+          <div className="border border-outline-variant p-4 bg-surface-container-lowest">
             {confPct !== null ? (
               <>
-                <p className="text-4xl font-bold text-gray-950 tabular-nums">{confPct}%</p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-4xl font-bold text-on-surface tabular-nums font-mono">{confPct}%</p>
+                <p className="text-sm text-on-surface-variant mt-1">
                   Confirmación — {m.conf_num} de {m.conf_denom}
                 </p>
               </>
             ) : (
               <>
-                <p className="text-lg font-semibold text-gray-400">Sin datos aún</p>
-                <p className="text-sm text-gray-400 mt-1">Confirmación</p>
+                <p className="text-lg font-semibold text-on-surface-variant">Sin datos aún</p>
+                <p className="text-sm text-on-surface-variant mt-1">Confirmación</p>
               </>
             )}
           </div>
-          <div className="border border-gray-200 rounded-xl p-4 bg-white">
+          <div className="border border-outline-variant p-4 bg-surface-container-lowest">
             {asistPct !== null ? (
               <>
-                <p className="text-4xl font-bold text-gray-950 tabular-nums">{asistPct}%</p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-4xl font-bold text-on-surface tabular-nums font-mono">{asistPct}%</p>
+                <p className="text-sm text-on-surface-variant mt-1">
                   Asistencia — {m.asist_num} de {m.asist_denom}
                 </p>
               </>
             ) : (
               <>
-                <p className="text-lg font-semibold text-gray-400">Sin datos aún</p>
-                <p className="text-sm text-gray-400 mt-1">Asistencia</p>
+                <p className="text-lg font-semibold text-on-surface-variant">Sin datos aún</p>
+                <p className="text-sm text-on-surface-variant mt-1">Asistencia</p>
               </>
             )}
           </div>
@@ -226,26 +223,26 @@ export default async function MetricasPage() {
 
       {/* ── WALK-INS ───────────────────────────────────────────────────── */}
       <section>
-        <h2 className="text-lg font-bold text-gray-950 mb-1">Walk-ins por centro</h2>
-        <p className="text-xs text-gray-500 mb-3">
-          Personas agregadas en el momento por el coordinador (<code className="bg-gray-100 px-1 rounded text-xs">is_walk_in = true</code>).
+        <h2 className="text-lg font-bold text-on-surface mb-1">Walk-ins por centro</h2>
+        <p className="text-xs text-on-surface-variant mb-3">
+          Personas agregadas en el momento por el coordinador (<code className="bg-surface-container px-1 text-xs">is_walk_in = true</code>).
         </p>
         {conWalkIns.length === 0 ? (
-          <p className="text-sm text-gray-500">Sin walk-ins registrados.</p>
+          <p className="text-sm text-on-surface-variant">Sin walk-ins registrados.</p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <div className="overflow-x-auto border border-outline-variant">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr className="text-left text-xs text-gray-600">
+              <thead className="bg-surface-container border-b border-outline-variant">
+                <tr className="text-left text-xs text-on-surface-variant">
                   <th className="px-3 py-2 font-semibold">Centro</th>
                   <th className="px-3 py-2 font-semibold text-right">Walk-ins</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y divide-outline-variant bg-surface-container-lowest">
                 {conWalkIns.map(c => (
                   <tr key={c.id}>
-                    <td className="px-3 py-2 text-gray-900">{c.name}</td>
-                    <td className="px-3 py-2 tabular-nums font-bold text-right">{c.walk_ins}</td>
+                    <td className="px-3 py-2 text-on-surface">{c.name}</td>
+                    <td className="px-3 py-2 tabular-nums font-mono font-bold text-right text-on-surface">{c.walk_ins}</td>
                   </tr>
                 ))}
               </tbody>
@@ -256,45 +253,45 @@ export default async function MetricasPage() {
 
       {/* ── NECESIDADES DESACTUALIZADAS ─────────────────────────────────── */}
       <section>
-        <h2 className="text-lg font-bold text-gray-950 mb-1">
+        <h2 className="text-lg font-bold text-on-surface mb-1">
           Necesidades sin actualizar (+12 h)
         </h2>
-        <p className="text-xs text-gray-500 mb-3">
+        <p className="text-xs text-on-surface-variant mb-3">
           Centros activos sin actualización de necesidades en más de 12 h, o sin ninguna cargada.
         </p>
         {desactualizados.length === 0 ? (
-          <p className="text-sm text-green-700 font-medium">
+          <p className="text-sm text-on-tertiary-container font-medium">
             Todos los centros tienen sus necesidades al día.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <div className="overflow-x-auto border border-outline-variant">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr className="text-left text-xs text-gray-600">
+              <thead className="bg-surface-container border-b border-outline-variant">
+                <tr className="text-left text-xs text-on-surface-variant">
                   <th className="px-3 py-2 font-semibold">Centro</th>
                   <th className="px-3 py-2 font-semibold">Coordinador</th>
                   <th className="px-3 py-2 font-semibold">WhatsApp</th>
                   <th className="px-3 py-2 font-semibold">Última act.</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y divide-outline-variant bg-surface-container-lowest">
                 {desactualizados.map(c => (
                   <tr key={c.id}>
-                    <td className="px-3 py-2 text-gray-900">{c.name}</td>
-                    <td className="px-3 py-2 text-gray-700">{c.coordinator_name ?? '—'}</td>
+                    <td className="px-3 py-2 text-on-surface">{c.name}</td>
+                    <td className="px-3 py-2 text-on-surface-variant">{c.coordinator_name ?? '—'}</td>
                     <td className="px-3 py-2">
                       {c.whatsapp_contact ? (
                         <a
                           href={`https://wa.me/${c.whatsapp_contact.replace(/^\+/, '')}`}
                           target="_blank"
                           rel="noreferrer noopener"
-                          className="text-green-700 underline font-mono text-xs"
+                          className="text-tertiary underline font-mono text-xs"
                         >
                           {c.whatsapp_contact}
                         </a>
                       ) : '—'}
                     </td>
-                    <td className="px-3 py-2 text-gray-500 text-xs">
+                    <td className="px-3 py-2 text-on-surface-variant font-mono text-xs">
                       {c.last_need_update
                         ? haceCuanto(new Date(c.last_need_update))
                         : 'Sin datos'}

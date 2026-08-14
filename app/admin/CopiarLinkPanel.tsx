@@ -15,7 +15,7 @@ export function CopiarLinkPanel({ url }: { url: string }) {
           setTimeout(() => { if (ref.current) ref.current.textContent = 'Copiar link' }, 2000)
         })
       }
-      className="block text-xs text-gray-600 underline cursor-pointer"
+      className="block text-xs text-on-surface-variant underline cursor-pointer"
     >
       Copiar link
     </button>

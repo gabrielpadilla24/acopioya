@@ -8,10 +8,7 @@ export default function NuevoCentroPage() {
 
   return (
     <main className="max-w-lg mx-auto px-4 py-6">
-      <div className="mb-4">
-        <a href="/admin" className="text-blue-700 text-sm underline">← Volver al admin</a>
-      </div>
-      <h1 className="text-xl font-bold text-gray-950 mb-6">Nuevo centro</h1>
+      <h1 className="text-xl font-bold text-on-surface mb-6">Nuevo centro</h1>
       <FormCentro action={crearCentro} siteUrl={siteUrl} />
     </main>
   )
