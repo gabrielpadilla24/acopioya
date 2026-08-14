@@ -12,7 +12,7 @@ export default async function AfichePage({ params }: Props) {
 
   const [centro] = await sql<{ name: string; slug: string }[]>`
     SELECT name, slug FROM centers
-    WHERE admin_token = ${token} AND is_active = true
+    WHERE admin_token = ${token}
     LIMIT 1
   `
   if (!centro) notFound()

@@ -19,7 +19,6 @@ async function verificarAcceso(
     JOIN centers c ON c.id = sh.center_id
     WHERE sh.id = ${shiftId}
       AND c.admin_token = ${token}
-      AND c.is_active   = true
     LIMIT 1
   `
   return rows[0] ?? null
@@ -41,7 +40,6 @@ export async function marcarAsistencia(
     JOIN centers c  ON c.id  = sh.center_id
     WHERE sg.id       = ${signupId}
       AND c.admin_token = ${token}
-      AND c.is_active   = true
     LIMIT 1
   `
   if (rows.length === 0) redirect('/')

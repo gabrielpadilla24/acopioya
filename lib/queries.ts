@@ -223,7 +223,7 @@ export async function obtenerCentroPorAdminToken(token: string): Promise<CentroP
     SELECT id, slug, name, address, city, status,
            coordinator_name, lat, lng, whatsapp_contact, schedule_note, is_active
     FROM centers
-    WHERE admin_token = ${token} AND is_active = true
+    WHERE admin_token = ${token}
     LIMIT 1
   `
   if (centers.length === 0) return null
@@ -319,7 +319,6 @@ export async function obtenerTurnoParaPanel(
     JOIN centers c ON c.id = sh.center_id
     WHERE sh.id = ${shiftId}
       AND c.admin_token = ${adminToken}
-      AND c.is_active   = true
     LIMIT 1
   `
   if (shifts.length === 0) return null

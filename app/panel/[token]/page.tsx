@@ -144,6 +144,16 @@ export default async function PanelPage({ params, searchParams }: Props) {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-6 space-y-8">
+      {!centro.is_active && (
+        <div role="alert" className="p-4 bg-amber-50 border border-amber-400 rounded-xl">
+          <p className="font-semibold text-amber-900">Este centro está pausado</p>
+          <p className="text-amber-800 text-sm mt-1">
+            No aparece en el listado público y no está recibiendo inscripciones nuevas.
+            Puedes seguir viendo y gestionando a los voluntarios ya inscritos.
+          </p>
+        </div>
+      )}
+
       {msg && (
         <div role="alert" className="p-3 bg-red-50 border border-red-300 rounded-xl text-red-800 text-sm">
           {msg}

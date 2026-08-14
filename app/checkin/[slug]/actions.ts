@@ -67,7 +67,6 @@ export async function registrarLlegada(
     JOIN centers c  ON c.id  = sh.center_id
     WHERE sg.phone  = ${phone}
       AND c.slug    = ${slug}
-      AND c.is_active = true
       AND sg.state  IN ('inscrito', 'confirmado', 'liberado', 'asistio')
       AND sh.starts_at BETWEEN now() - interval '12 hours' AND now() + interval '12 hours'
     ORDER BY ABS(EXTRACT(EPOCH FROM (sh.starts_at - now())))

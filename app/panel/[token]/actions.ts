@@ -6,7 +6,7 @@ import { sql }            from '@/lib/db'
 
 async function getCentro(token: string): Promise<{ id: string; slug: string } | null> {
   const rows = await sql<{ id: string; slug: string }[]>`
-    SELECT id, slug FROM centers WHERE admin_token = ${token} AND is_active = true LIMIT 1
+    SELECT id, slug FROM centers WHERE admin_token = ${token} LIMIT 1
   `
   return rows[0] ?? null
 }
