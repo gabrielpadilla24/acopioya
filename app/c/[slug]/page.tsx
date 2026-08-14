@@ -1,8 +1,9 @@
 export const revalidate = 30
 
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { obtenerCentroPorSlug, listarSlugsActivos, type Need } from '@/lib/queries'
+import { sql } from '@/lib/db'
 import { NIVELES, ROLES, type Nivel, type Rol } from '@/lib/constants'
 import { esHoy, esMañana, rangoHorario, haceCuanto, formatearFecha } from '@/lib/time'
 
@@ -94,7 +95,17 @@ export default async function CentroPage({ params }: Props) {
   const { slug } = await params
   const centro = await obtenerCentroPorSlug(slug)
 
-  if (!centro) notFound()
+  if (!centro) {
+    const [alias] = await sql<{ slug: string }[]>`
+      SELECT c.slug
+      FROM center_slug_aliases a
+      JOIN centers c ON c.id = a.center_id
+      WHERE a.slug = ${slug} AND c.is_active = true
+      LIMIT 1
+    `
+    if (alias) permanentRedirect('/c/' + alias.slug)
+    notFound()
+  }
 
   const { needs, shifts } = centro
 
