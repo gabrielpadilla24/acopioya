@@ -13,5 +13,7 @@ export async function GET(request: Request) {
   const stats = await liberarCuposNoConfirmados()
   console.log('[cron] liberar-cupos:', stats)
 
-  return Response.json(stats)
+  // modelo: 'directo-a-confirmado' → todos los signups nacen confirmados; esta
+  // ruta retornará liberados:0 hasta que el modelo cambie o se migre la función.
+  return Response.json({ ...stats, modelo: 'directo-a-confirmado' })
 }

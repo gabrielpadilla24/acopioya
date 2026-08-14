@@ -5,7 +5,7 @@ import { obtenerSignupPorToken }            from '@/lib/queries'
 import { ROLES, type Rol }                  from '@/lib/constants'
 import { esHoy, esMañana, rangoHorario,
          formatearFecha, formatearHora }    from '@/lib/time'
-import { cancelar, confirmar }              from './actions'
+import { cancelar }                         from './actions'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 
@@ -28,18 +28,11 @@ export default async function GestionarPage({ params, searchParams }: Props) {
   const sg = await obtenerSignupPorToken(token)
   if (!sg) notFound()
 
-  const inicio    = new Date(sg.starts_at)
-  const fin       = new Date(sg.ends_at)
-  const ahora     = new Date()
-  const cuatroAntes  = new Date(inicio.getTime() - 4 * 60 * 60 * 1000)
-  const enVentana    = ahora >= cuatroAntes && ahora < inicio
-  const yaEmpezó     = ahora >= inicio
-
+  const inicio   = new Date(sg.starts_at)
+  const fin      = new Date(sg.ends_at)
   const rolLabel = ROLES[sg.role as Rol] ?? sg.role
-  const horaConf = formatearHora(cuatroAntes)
 
-  const cancelarConToken  = cancelar.bind(null, token)
-  const confirmarConToken = confirmar.bind(null, token)
+  const cancelarConToken = cancelar.bind(null, token)
 
   const resumen = (
     <div className="mb-6">
@@ -71,44 +64,9 @@ export default async function GestionarPage({ params, searchParams }: Props) {
       <main className="flex-1 max-w-lg mx-auto w-full px-4 py-6">
         {resumen}
 
-        {/* Error banner from confirmar redirect */}
         {msg && (
           <div role="alert" className="mb-4 p-3 bg-error-container border border-error rounded text-error text-sm font-medium">
             {msg}
-          </div>
-        )}
-
-        {/* ── Estado: INSCRITO ─────────────────────────────────── */}
-        {sg.state === 'inscrito' && !enVentana && !yaEmpezó && (
-          <div>
-            <div className="bg-secondary-container border border-secondary rounded p-4 text-sm text-on-secondary-container">
-              <p className="font-semibold">Tu inscripción está activa.</p>
-              <p className="mt-1">
-                Podrás confirmar tu asistencia a partir de las <strong>{horaConf}</strong> (4 horas antes del turno).
-              </p>
-            </div>
-            {botonCancelar}
-          </div>
-        )}
-
-        {sg.state === 'inscrito' && enVentana && (
-          <div>
-            <form action={confirmarConToken}>
-              <button
-                type="submit"
-                className="w-full min-h-[56px] bg-tertiary text-on-tertiary font-bold rounded text-lg"
-              >
-                ✅ Confirmo que voy
-              </button>
-            </form>
-            {botonCancelar}
-          </div>
-        )}
-
-        {sg.state === 'inscrito' && yaEmpezó && (
-          <div className="bg-surface-container rounded p-4 text-sm text-on-surface-variant">
-            <p className="font-semibold text-on-surface">El turno ya comenzó.</p>
-            <p className="mt-1">Si aún no llegaste, intenta coinscribirte desde el centro.</p>
           </div>
         )}
 
@@ -116,29 +74,23 @@ export default async function GestionarPage({ params, searchParams }: Props) {
         {sg.state === 'confirmado' && (
           <div>
             <div className="bg-tertiary-container border border-tertiary rounded p-4">
-              <p className="font-bold text-on-tertiary-container">✅ Confirmado. ¡Te esperamos!</p>
+              <p className="font-bold text-on-tertiary-container text-lg">Tu cupo está confirmado</p>
               <p className="text-on-tertiary-container text-sm mt-1">
-                A las {formatearHora(inicio)} en {sg.center_address}.
+                {formatearHora(inicio)} en {sg.center_address}. Al llegar, escanea el QR del centro.
               </p>
-              <p className="text-on-tertiary-container text-sm mt-1">Al llegar, escanea el QR del centro.</p>
             </div>
-            {botonCancelar}
-          </div>
-        )}
 
-        {/* ── Estado: LIBERADO ─────────────────────────────────── */}
-        {sg.state === 'liberado' && (
-          <div className="bg-warning-container border border-warning rounded p-4">
-            <p className="font-bold text-on-warning-container">Tu cupo se liberó.</p>
-            <p className="text-on-warning-container text-sm mt-1">
-              No confirmaste a tiempo y el cupo quedó disponible para otra persona.
+            <a
+              href={`/api/ics/${token}`}
+              className="mt-3 flex items-center justify-center gap-2 min-h-[48px] w-full border border-outline-variant rounded text-on-surface font-medium bg-surface-container-lowest text-base"
+            >
+              Agregar a mi calendario
+            </a>
+
+            <p className="mt-4 text-sm text-on-surface-variant">
+              Si no puedes ir, cancela para que otra persona pueda tomarlo.
             </p>
-            <p className="text-on-warning-container text-sm mt-2">
-              ¿Aún quieres ir?{' '}
-              <a href={`/c/${sg.center_slug}`} className="underline font-medium">
-                Vuelve al centro e inscríbete de nuevo
-              </a>
-            </p>
+            {botonCancelar}
           </div>
         )}
 
@@ -152,15 +104,30 @@ export default async function GestionarPage({ params, searchParams }: Props) {
           </div>
         )}
 
-        {/* ── Estado: ASISTIO ──────────────────────────────────── */}
+        {/* ── Estado: LIBERADO ─────────────────────────────────── */}
+        {sg.state === 'liberado' && (
+          <div className="bg-warning-container border border-warning rounded p-4">
+            <p className="font-bold text-on-warning-container">Tu cupo fue liberado.</p>
+            <p className="text-on-warning-container text-sm mt-1">
+              Tu lugar quedó disponible para otra persona.
+            </p>
+            <p className="text-on-warning-container text-sm mt-2">
+              ¿Aún quieres ir?{' '}
+              <a href={`/c/${sg.center_slug}`} className="underline font-medium">
+                Vuelve al centro e inscríbete de nuevo
+              </a>
+            </p>
+          </div>
+        )}
+
+        {/* ── Estado: ASISTIÓ ──────────────────────────────────── */}
         {sg.state === 'asistio' && (
           <div className="bg-tertiary-container border border-tertiary rounded p-6 text-center">
-            <p className="text-2xl font-bold text-on-surface">¡Gracias por ayudar! 💛</p>
+            <p className="text-2xl font-bold text-on-surface">¡Gracias por ayudar!</p>
             <p className="text-on-surface-variant mt-2 text-sm">Tu participación hace la diferencia.</p>
           </div>
         )}
 
-        {/* Volver discreto al pie */}
         <div className="mt-8 pt-6 border-t border-outline-variant">
           <a href="/" className="text-sm text-on-surface-variant hover:text-on-surface">
             ← Ver otros centros

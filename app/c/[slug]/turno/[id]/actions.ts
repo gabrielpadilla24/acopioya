@@ -69,10 +69,10 @@ export async function inscribir(
       // Upsert signup — only re-inscribes if previous state is cancelado/liberado
       const inserted = await tx<{ id: string }[]>`
         INSERT INTO signups (shift_id, phone, name, state, manage_token)
-        VALUES (${shiftId}, ${phone}, ${nombre}, 'inscrito', ${token})
+        VALUES (${shiftId}, ${phone}, ${nombre}, 'confirmado', ${token})
         ON CONFLICT (shift_id, phone) DO UPDATE
           SET name         = EXCLUDED.name,
-              state        = 'inscrito',
+              state        = 'confirmado',
               manage_token = ${token}
           WHERE signups.state IN ('cancelado', 'liberado')
         RETURNING id

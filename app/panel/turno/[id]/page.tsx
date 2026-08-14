@@ -34,7 +34,6 @@ export default async function TurnoPanelPage({ params }: Props) {
 
   const { signups } = turno
   const confirmados  = signups.filter(s => s.state === 'confirmado').length
-  const sinConfirmar = signups.filter(s => s.state === 'inscrito').length
   const liberados    = signups.filter(s => s.state === 'liberado').length
   const asistieron   = signups.filter(s => s.state === 'asistio').length
 
@@ -86,7 +85,7 @@ export default async function TurnoPanelPage({ params }: Props) {
             {diaLabel}, {rangoHorario(inicio, fin)}
           </p>
           <p className="text-on-surface-variant text-sm mt-1 tabular-nums">
-            {turno.taken}/{maxCupos} reservados · {confirmados} confirmados · {sinConfirmar} sin confirmar
+            {turno.taken}/{maxCupos} reservados · {confirmados} confirmados
             {liberados  > 0 && <span> · {liberados} liberados</span>}
             {asistieron > 0 && <span> · {asistieron} asistieron</span>}
           </p>
@@ -177,7 +176,7 @@ export default async function TurnoPanelPage({ params }: Props) {
         <section className="border border-outline-variant rounded p-4 bg-surface-container-lowest">
           <h2 className="text-base font-bold text-on-surface mb-1">Liberación manual</h2>
           <p className="text-xs text-on-surface-variant mb-3">
-            Libera cupos no confirmados. El cron lo hace cada 15 min; esto es el respaldo.
+            Libera los cupos de quienes no llegaron, para que otras personas puedan tomarlos.
           </p>
           <LiberarAhora shiftId={id} />
         </section>

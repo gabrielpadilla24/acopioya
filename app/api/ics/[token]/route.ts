@@ -54,7 +54,7 @@ export async function GET(
     'BEGIN:VALARM',
     'TRIGGER:-PT4H',
     'ACTION:DISPLAY',
-    icsFold('DESCRIPTION:¡Confirma tu asistencia en AcopioYA!'),
+    icsFold('DESCRIPTION:Recuerda tu turno de voluntariado en AcopioYA'),
     'END:VALARM',
     'END:VEVENT',
     'END:VCALENDAR',

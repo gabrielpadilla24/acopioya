@@ -50,9 +50,6 @@ export default async function ListoPage({ params, searchParams }: Props) {
   const rango    = rangoHorario(inicio, fin)
   const etiqueta = `${diaLabel}, ${rango}`
 
-  const inicioConfirmacion = new Date(inicio.getTime() - 4 * 60 * 60 * 1000)
-  const horaConfirmacion   = formatearHora(inicioConfirmacion)
-
   const waMsg = `Mi turno en ${sg.center_name} — ${rolLabel}, ${etiqueta}. Gestiona tu inscripción aquí: ${manageUrl}`
   const waUrl = `https://wa.me/?text=${encodeURIComponent(waMsg)}`
 
@@ -79,14 +76,13 @@ export default async function ListoPage({ params, searchParams }: Props) {
           <p className="text-on-surface-variant text-sm">{sg.center_address}, {sg.center_city}</p>
         </div>
 
-        {/* 2 — Caja de confirmación */}
-        <div className="mt-4 bg-warning-container border-2 border-warning rounded p-4">
-          <p className="font-bold text-on-warning-container text-sm">
-            ⚠️ Entre 4 y 2 horas antes del turno debes confirmar que vas, desde tu enlace.
-            Si no confirmas, tu cupo se libera para otra persona.
+        {/* 2 — Cupo confirmado */}
+        <div className="mt-4 bg-tertiary-container border border-tertiary rounded p-4">
+          <p className="font-bold text-on-tertiary-container text-sm">
+            Tu cupo está confirmado. ¡Te esperamos!
           </p>
-          <p className="mt-2 text-on-warning-container text-sm">
-            Podrás confirmar desde las <strong>{horaConfirmacion}</strong>.
+          <p className="mt-1 text-on-tertiary-container text-sm">
+            Si no puedes ir, usa tu enlace para cancelar y liberar el cupo.
           </p>
         </div>
 

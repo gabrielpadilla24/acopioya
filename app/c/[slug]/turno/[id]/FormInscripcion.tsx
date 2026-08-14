@@ -87,7 +87,7 @@ export default function FormInscripcion({ slug, shiftId }: { slug: string; shift
         disabled={pending}
         className="w-full min-h-[48px] bg-secondary text-on-primary font-bold rounded text-base disabled:opacity-60"
       >
-        {pending ? 'Inscribiendo…' : 'Confirmar inscripción'}
+        {pending ? 'Inscribiendo…' : 'Inscribirme'}
       </button>
     </form>
   )

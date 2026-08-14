@@ -6,7 +6,7 @@ import { sql }                       from '@/lib/db'
 import { requiereSesion }            from '@/lib/auth'
 import { normalizarCelular }         from '@/lib/phone'
 import { generarTokenVoluntario }    from '@/lib/tokens'
-import { liberarCuposNoConfirmados } from '@/lib/liberar'
+import { liberarCuposNoConfirmados, liberarAusentes, contarAusentes } from '@/lib/liberar'
 
 async function verificarAcceso(
   shiftId: string,
@@ -100,8 +100,29 @@ export async function agregarWalkIn(
   redirect('/panel/turno/' + shiftId)
 }
 
-// ── 3. Liberar no confirmados ahora ──────────────────────────────────────────
+// ── 3. Liberar cupos de ausentes ─────────────────────────────────────────────
 
+export async function contarAusentesAhora(shiftId: string): Promise<number> {
+  const acceso = await verificarAcceso(shiftId)
+  if (!acceso) return 0
+  return contarAusentes(shiftId)
+}
+
+export async function liberarAusentesAhora(
+  shiftId: string,
+): Promise<{ liberados: number; turnos: number } | null> {
+  const acceso = await verificarAcceso(shiftId)
+  if (!acceso) return null
+
+  const stats = await liberarAusentes(shiftId)
+
+  revalidatePath('/panel/turno/' + shiftId)
+  revalidatePath('/panel')
+
+  return stats
+}
+
+// Conservado para el cron (state='inscrito', siempre retorna 0 con el modelo actual)
 export async function liberarAhora(
   shiftId: string,
 ): Promise<{ liberados: number; turnos: number } | null> {
