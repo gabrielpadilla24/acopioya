@@ -342,6 +342,76 @@ export async function obtenerTurnoParaPanel(
   return { ...shift, signups }
 }
 
+// ── landing / donar ──────────────────────────────────────────────────────────
+
+export type NecesidadPublica = {
+  category: string
+  level: 'urgent' | 'needed' | 'enough' | 'do_not_bring'
+}
+
+export type CentroParaLanding = {
+  id:               string
+  slug:             string
+  name:             string
+  city:             string
+  address:          string
+  status:           'open' | 'full' | 'closed'
+  lat:              number | null
+  lng:              number | null
+  whatsapp_contact: string | null
+  coordinator_name: string | null
+  schedule_note:    string | null
+  urgent_count:     number
+  available_shifts: number
+  last_need_update: Date | null
+  needs:            NecesidadPublica[]
+}
+
+type CentroParaLandingRow = Omit<CentroParaLanding, 'needs'> & {
+  // postgres.js parses json_agg → JS array automatically
+  needs: NecesidadPublica[]
+}
+
+export async function obtenerCentrosParaLanding(): Promise<CentroParaLanding[]> {
+  return sql<CentroParaLandingRow[]>`
+    SELECT
+      c.id, c.slug, c.name, c.city, c.address, c.status,
+      c.lat, c.lng, c.whatsapp_contact, c.coordinator_name, c.schedule_note,
+      COALESCE(ns.urgent_count, 0)::int      AS urgent_count,
+      COALESCE(avail.available_shifts, 0)::int AS available_shifts,
+      ns.last_need_update,
+      COALESCE(ns.needs_agg, '[]'::json)     AS needs
+    FROM centers c
+    LEFT JOIN (
+      SELECT
+        center_id,
+        COUNT(*) FILTER (WHERE level = 'urgent')::int AS urgent_count,
+        MAX(updated_at)                               AS last_need_update,
+        json_agg(
+          json_build_object('category', category, 'level', level)
+          ORDER BY
+            CASE level
+              WHEN 'urgent'       THEN 1
+              WHEN 'needed'       THEN 2
+              WHEN 'enough'       THEN 3
+              ELSE 4
+            END,
+            category
+        )                                             AS needs_agg
+      FROM needs
+      GROUP BY center_id
+    ) ns    ON ns.center_id    = c.id
+    LEFT JOIN (
+      SELECT center_id, COUNT(*)::int AS available_shifts
+      FROM shifts
+      WHERE status = 'open' AND ends_at > now() AND taken < capacity
+      GROUP BY center_id
+    ) avail ON avail.center_id = c.id
+    WHERE c.is_active = true
+    ORDER BY COALESCE(ns.urgent_count, 0) DESC, c.name
+  `
+}
+
 // ── queries existentes ───────────────────────────────────────────────────────
 
 export async function obtenerCentroPorSlug(slug: string): Promise<CentroConDatos | null> {

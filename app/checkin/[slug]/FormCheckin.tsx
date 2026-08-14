@@ -12,11 +12,11 @@ export function FormCheckin({ slug, centerName }: { slug: string; centerName: st
     return (
       <div className="text-center px-6 py-10 space-y-4">
         <div className="text-7xl">✅</div>
-        <h2 className="text-3xl font-black text-gray-950">¡Llegaste, {state.nombre}!</h2>
-        <p className="text-2xl font-semibold text-gray-800">{state.rol}</p>
-        <p className="text-xl text-gray-600">{state.horario}</p>
+        <h2 className="text-3xl font-black text-on-surface">¡Llegaste, {state.nombre}!</h2>
+        <p className="text-2xl font-semibold text-on-surface">{state.rol}</p>
+        <p className="text-xl text-on-surface-variant">{state.horario}</p>
         {state.coordinador && (
-          <p className="text-xl font-medium text-blue-800 mt-2">
+          <p className="text-xl font-medium text-secondary mt-2">
             Repórtate con {state.coordinador}
           </p>
         )}
@@ -27,17 +27,17 @@ export function FormCheckin({ slug, centerName }: { slug: string; centerName: st
   // ── Formulario ───────────────────────────────────────────────────────────
   return (
     <form action={formAction} className="px-6 py-6 space-y-4">
-      <h1 className="text-2xl font-bold text-gray-950">
+      <h1 className="text-2xl font-bold text-on-surface">
         Check-in · {centerName}
       </h1>
 
       {(state?.status === 'error' || state?.status === 'nomatch') && (
         <div
           role="alert"
-          className={`p-4 rounded-xl text-base font-medium ${
+          className={`p-4 rounded text-base font-medium ${
             state.status === 'nomatch'
-              ? 'bg-amber-50 border border-amber-400 text-amber-900'
-              : 'bg-red-50 border border-red-400 text-red-900'
+              ? 'bg-warning-container border border-warning text-on-warning-container'
+              : 'bg-error-container border border-error text-error'
           }`}
         >
           {state.message}
@@ -51,14 +51,14 @@ export function FormCheckin({ slug, centerName }: { slug: string; centerName: st
         required
         autoFocus
         placeholder="3001234567"
-        className="w-full min-h-[56px] text-2xl border-2 border-gray-300 rounded-xl px-4
-                   focus:outline-none focus:border-blue-500"
+        className="w-full min-h-[56px] text-2xl border-2 border-outline-variant rounded px-4
+                   focus:outline-none focus:border-secondary bg-surface-container-lowest text-on-surface"
       />
 
       <button
         type="submit"
         disabled={pending}
-        className="w-full min-h-[56px] bg-blue-700 text-white text-xl font-black rounded-xl disabled:opacity-60"
+        className="w-full min-h-[56px] bg-primary text-on-primary text-xl font-black rounded disabled:opacity-60"
       >
         {pending ? 'Buscando…' : 'Registrar llegada'}
       </button>

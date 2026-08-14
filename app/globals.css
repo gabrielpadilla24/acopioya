@@ -1,6 +1,49 @@
 @import "tailwindcss";
 
+@theme {
+  /* Brand */
+  --color-primary:                  #af101a;
+  --color-primary-container:        #d32f2f;
+  --color-on-primary:               #ffffff;
+
+  /* Secondary */
+  --color-secondary:                #005faf;
+  --color-secondary-container:      #dbeafe;
+  --color-on-secondary-container:   #1e3a5f;
+
+  /* Tertiary */
+  --color-tertiary:                 #016619;
+  --color-on-tertiary:              #ffffff;
+  --color-tertiary-container:       #dcfce7;
+  --color-on-tertiary-container:    #14532d;
+
+  /* Warning (needed / cautionary) */
+  --color-warning:                  #b45309;
+  --color-warning-container:        #fffbeb;
+  --color-on-warning-container:     #78350f;
+
+  /* Surfaces */
+  --color-surface:                  #f9f9f9;
+  --color-surface-container:        #eeeeee;
+  --color-surface-container-lowest: #ffffff;
+
+  /* Text */
+  --color-on-surface:               #1a1c1c;
+  --color-on-surface-variant:       #5b403d;
+
+  /* Borders */
+  --color-outline-variant:          #e4beba;
+
+  /* Error */
+  --color-error:                    #ba1a1a;
+  --color-error-container:          #ffdad6;
+
+  /* Typography */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
 }

@@ -1,149 +1,151 @@
 export const revalidate = 60
 
-import {
-  obtenerCentrosParaHome,
-  obtenerTurnosDescubiertos,
-} from '@/lib/queries'
-import { ROLES, type Rol } from '@/lib/constants'
-import { esHoy, esMañana, rangoHorario, formatearFecha } from '@/lib/time'
+import { obtenerCentrosParaLanding, type CentroParaLanding } from '@/lib/queries'
+import { haceCuanto } from '@/lib/time'
+import Header from './components/Header'
+import Footer from './components/Footer'
+import MapaWrapper from './components/MapaWrapper'
+import type { CentroMapa } from './components/Mapa'
 
-const STATUS_UI = {
-  open:   { badge: '🟢 ABIERTO',  cls: 'bg-green-100 text-green-900' },
-  full:   { badge: '🟠 LLENO',    cls: 'bg-orange-100 text-orange-900' },
-  closed: { badge: '🔴 CERRADO',  cls: 'bg-red-100 text-red-900' },
-} as const
-
-function etiquetaTurno(starts_at: Date, ends_at: Date): string {
-  const inicio = new Date(starts_at)
-  const fin    = new Date(ends_at)
-  const rango  = rangoHorario(inicio, fin)
-  if (esHoy(inicio))    return `Hoy, ${rango}`
-  if (esMañana(inicio)) return `Mañana, ${rango}`
-  return `${formatearFecha(inicio)}, ${rango}`
+const STATUS_BADGE: Record<string, string> = {
+  open:   'bg-tertiary-container text-on-tertiary-container',
+  full:   'bg-warning-container text-on-warning-container',
+  closed: 'bg-surface-container text-on-surface-variant',
+}
+const STATUS_LABEL: Record<string, string> = {
+  open:   'Abierto',
+  full:   'Lleno',
+  closed: 'Cerrado',
 }
 
-function esNocturno(starts_at: Date): boolean {
-  const hora = new Intl.DateTimeFormat('es-CO', {
-    timeZone: 'America/Bogota',
-    hour: 'numeric',
-    hour12: false,
-  }).formatToParts(new Date(starts_at)).find(p => p.type === 'hour')?.value ?? '0'
-  return parseInt(hora) >= 17
+const PILL: Record<string, string> = {
+  urgent: 'bg-primary text-on-primary rounded-full px-2 py-0.5 text-xs font-semibold',
+  needed: 'bg-warning-container border border-warning text-on-warning-container rounded-full px-2 py-0.5 text-xs font-semibold',
+  enough: 'bg-tertiary-container text-on-tertiary-container rounded-full px-2 py-0.5 text-xs font-semibold',
+}
+
+function TarjetaCentro({ c }: { c: CentroParaLanding }) {
+  const pildoras = c.needs.filter(n => n.level !== 'do_not_bring').slice(0, 7)
+
+  return (
+    <a
+      href={`/c/${c.slug}`}
+      className="flex flex-col border border-outline-variant rounded bg-surface-container-lowest p-5 hover:shadow-md transition-shadow"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-bold text-on-surface leading-tight">{c.name}</p>
+        <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded ${STATUS_BADGE[c.status] ?? STATUS_BADGE.closed}`}>
+          {STATUS_LABEL[c.status] ?? c.status}
+        </span>
+      </div>
+      <p className="text-on-surface-variant text-sm mt-0.5">{c.city}</p>
+
+      {pildoras.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {pildoras.map(n => (
+            <span key={n.category} className={PILL[n.level] ?? PILL.enough}>
+              {n.category}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-auto pt-3 flex items-center justify-between">
+        {c.last_need_update ? (
+          <p className="text-xs font-mono text-on-surface-variant">
+            Act. {haceCuanto(new Date(c.last_need_update))}
+          </p>
+        ) : (
+          <span />
+        )}
+        <p className="text-primary text-sm font-semibold">Ver detalles →</p>
+      </div>
+    </a>
+  )
 }
 
 export default async function HomePage() {
-  const [centros, turnos] = await Promise.all([
-    obtenerCentrosParaHome(),
-    obtenerTurnosDescubiertos(),
-  ])
+  const centros = await obtenerCentrosParaLanding()
+
+  const centrosMapa: CentroMapa[] = centros
+    .filter(c => c.lat !== null && c.lng !== null)
+    .map(c => ({
+      id:       c.id,
+      slug:     c.slug,
+      name:     c.name,
+      city:     c.city,
+      lat:      c.lat!,
+      lng:      c.lng!,
+      urgentes: c.needs.filter(n => n.level === 'urgent').map(n => n.category),
+    }))
 
   return (
-    <main className="max-w-lg mx-auto px-4 py-6">
+    <div className="flex flex-col min-h-screen">
 
-      {/* ── HERO ────────────────────────────────────── */}
-      <div className="py-4">
-        <h1 className="text-3xl font-bold text-gray-950">AcopioYA</h1>
-        <p className="mt-2 text-gray-700 text-base leading-snug">
-          Encuentra dónde ayudar. Inscríbete en un turno.<br />
-          Llega cuando te necesitan.
-        </p>
+      {/* ── HEADER: banner + nav ─────────────────────────────────── */}
+      <div className="sticky top-0 z-50 shadow-sm">
+        <div
+          role="status"
+          className="bg-primary text-on-primary text-center py-2 px-4 text-sm font-medium"
+        >
+          Emergencia activa · Lleva lo que se necesita urgente
+        </div>
+        <Header />
       </div>
 
-      {/* ── TURNOS DESCUBIERTOS ──────────────────────── */}
-      {turnos.length > 0 && (
-        <section className="mt-4">
-          <h2 className="text-lg font-bold text-gray-950 mb-3">
-            Turnos que necesitan gente
-          </h2>
-          <div className="space-y-3">
-            {turnos.map(t => {
-              const nocturno = esNocturno(t.starts_at)
-              const rolLabel = ROLES[t.role as Rol] ?? t.role
-              return (
-                <a
-                  key={t.id}
-                  href={`/c/${t.center_slug}`}
-                  className={`block rounded-xl p-4 min-h-[44px] ${
-                    nocturno
-                      ? 'border-2 border-indigo-400 bg-indigo-50'
-                      : 'border border-gray-300 bg-white'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-bold text-gray-950 leading-tight">{t.center_name}</p>
-                    {nocturno && (
-                      <span className="shrink-0 text-xs font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
-                        🌙 Nocturno
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-gray-800 text-sm mt-0.5">{rolLabel}</p>
-                  <p className="text-gray-700 text-sm mt-1">
-                    {etiquetaTurno(t.starts_at, t.ends_at)}
-                  </p>
-                  <p className="text-gray-600 text-sm mt-1">
-                    {t.taken} de {t.capacity} cupos ocupados
-                  </p>
-                </a>
-              )
-            })}
+      <main className="flex-1">
+
+        {/* ── HERO ─────────────────────────────────────────────────── */}
+        <section className="max-w-screen-xl mx-auto px-4 lg:px-8 pt-10 pb-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+
+          {/* Left: copy + CTAs */}
+          <div>
+            <h1 className="text-4xl lg:text-5xl font-bold text-on-surface leading-tight">
+              Ayuda donde<br />más se necesita
+            </h1>
+            <p className="mt-4 text-on-surface-variant text-lg leading-relaxed max-w-md">
+              Centros de acopio activos en Bogotá. Ve qué llevar, inscríbete en un turno y llega cuando te necesitan.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a
+                href="#centros"
+                className="px-6 py-3 bg-primary text-on-primary font-bold rounded text-sm min-h-[48px] flex items-center hover:bg-primary-container transition-colors"
+              >
+                Ver centros →
+              </a>
+              <a
+                href="/donar"
+                className="px-6 py-3 border-2 border-primary text-primary font-bold rounded text-sm min-h-[48px] flex items-center hover:bg-error-container transition-colors"
+              >
+                ¿Qué llevar?
+              </a>
+            </div>
+          </div>
+
+          {/* Right: map */}
+          <div className="w-full h-[300px] lg:h-[450px] rounded overflow-hidden border border-outline-variant">
+            <MapaWrapper centros={centrosMapa} />
           </div>
         </section>
-      )}
 
-      {/* ── CENTROS ──────────────────────────────────── */}
-      <section className="mt-6">
-        <h2 className="text-lg font-bold text-gray-950 mb-3">Centros de acopio</h2>
+        {/* ── CENTROS ──────────────────────────────────────────────── */}
+        <section id="centros" className="max-w-screen-xl mx-auto px-4 lg:px-8 py-8 scroll-mt-32">
+          <h2 className="text-2xl font-bold text-on-surface mb-6">Centros de acopio</h2>
 
-        {centros.length === 0 ? (
-          <p className="text-gray-700 text-sm">No hay centros activos en este momento.</p>
-        ) : (
-          <div className="space-y-3">
-            {centros.map(c => {
-              const ui = STATUS_UI[c.status] ?? STATUS_UI.closed
-              const resumen: string[] = []
-              if (c.urgent_count > 0)
-                resumen.push(`🔴 ${c.urgent_count} ${c.urgent_count === 1 ? 'urgente' : 'urgentes'}`)
-              if (c.available_shifts > 0)
-                resumen.push(`${c.available_shifts} ${c.available_shifts === 1 ? 'turno con cupo' : 'turnos con cupo'}`)
+          {centros.length === 0 ? (
+            <p className="text-on-surface-variant">No hay centros activos en este momento.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {centros.map(c => (
+                <TarjetaCentro key={c.id} c={c} />
+              ))}
+            </div>
+          )}
+        </section>
 
-              return (
-                <a
-                  key={c.id}
-                  href={`/c/${c.slug}`}
-                  className="block border border-gray-300 rounded-xl p-4 bg-white min-h-[44px]"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-bold text-gray-950 leading-tight">{c.name}</p>
-                    <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-lg ${ui.cls}`}>
-                      {ui.badge}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 text-sm mt-0.5">{c.city}</p>
-                  {resumen.length > 0 && (
-                    <p className="text-gray-700 text-sm mt-1">{resumen.join(' · ')}</p>
-                  )}
-                </a>
-              )
-            })}
-          </div>
-        )}
-      </section>
+      </main>
 
-      {/* ── FOOTER ───────────────────────────────────── */}
-      <footer className="mt-10 pt-6 border-t border-gray-200 space-y-2 text-sm text-gray-600">
-        <p>
-          <a href="/privacidad" className="underline min-h-[44px] inline-flex items-center">
-            Aviso de privacidad
-          </a>
-        </p>
-        <p>
-          ¿Coordinas un centro de acopio?{' '}
-          <a href="mailto:gabrielpadillab03@gmail.com" className="underline text-blue-700">
-            Escríbenos
-          </a>
-        </p>
-      </footer>
-    </main>
+      <Footer />
+    </div>
   )
 }
