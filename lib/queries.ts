@@ -202,6 +202,77 @@ export async function obtenerTurnoConCentro(shiftId: string, slug: string): Prom
   return rows[0] ?? null
 }
 
+// ── tipos panel ──────────────────────────────────────────────────────────────
+
+export type ShiftConConteos = Shift & {
+  status:             'open' | 'closed'
+  whatsapp_group_url: string | null
+  confirmados:        number
+  inscritos:          number
+  liberados:          number
+  asistieron:         number
+}
+
+export type CentroPanelDetalle = Center & {
+  needs:  Need[]
+  shifts: ShiftConConteos[]
+}
+
+export async function obtenerCentroPorAdminToken(token: string): Promise<CentroPanelDetalle | null> {
+  const centers = await sql<Center[]>`
+    SELECT id, slug, name, address, city, status,
+           coordinator_name, lat, lng, whatsapp_contact, schedule_note, is_active
+    FROM centers
+    WHERE admin_token = ${token} AND is_active = true
+    LIMIT 1
+  `
+  if (centers.length === 0) return null
+  const center = centers[0]
+
+  const [needs, shifts] = await Promise.all([
+    sql<Need[]>`
+      SELECT id, center_id, category, level, note, updated_at
+      FROM needs
+      WHERE center_id = ${center.id}
+      ORDER BY CASE level
+        WHEN 'urgent'       THEN 1
+        WHEN 'needed'       THEN 2
+        WHEN 'do_not_bring' THEN 3
+        WHEN 'enough'       THEN 4
+        ELSE 5
+      END, category
+    `,
+    sql<ShiftConConteos[]>`
+      SELECT
+        sh.id, sh.center_id, sh.role, sh.role_detail,
+        sh.starts_at, sh.ends_at,
+        sh.capacity, sh.overbook_pct, sh.taken,
+        sh.whatsapp_group_url, sh.status,
+        COALESCE(sg.confirmados, 0)::int AS confirmados,
+        COALESCE(sg.inscritos,   0)::int AS inscritos,
+        COALESCE(sg.liberados,   0)::int AS liberados,
+        COALESCE(sg.asistieron,  0)::int AS asistieron
+      FROM shifts sh
+      LEFT JOIN (
+        SELECT shift_id,
+          COUNT(*) FILTER (WHERE state = 'confirmado')::int AS confirmados,
+          COUNT(*) FILTER (WHERE state = 'inscrito')::int   AS inscritos,
+          COUNT(*) FILTER (WHERE state = 'liberado')::int   AS liberados,
+          COUNT(*) FILTER (WHERE state = 'asistio')::int    AS asistieron
+        FROM signups
+        GROUP BY shift_id
+      ) sg ON sg.shift_id = sh.id
+      WHERE sh.center_id = ${center.id}
+        AND sh.ends_at > (date_trunc('day', now() AT TIME ZONE 'America/Bogota') AT TIME ZONE 'America/Bogota')
+      ORDER BY sh.starts_at
+    `,
+  ])
+
+  return { ...center, needs, shifts }
+}
+
+// ── queries existentes ───────────────────────────────────────────────────────
+
 export async function obtenerCentroPorSlug(slug: string): Promise<CentroConDatos | null> {
   const centers = await sql<Center[]>`
     SELECT id, slug, name, address, city, status,
