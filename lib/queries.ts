@@ -125,6 +125,26 @@ export async function listarSlugsActivos(): Promise<{ slug: string }[]> {
   `
 }
 
+export type TurnoConCentro = Shift & {
+  center_name: string
+  center_slug: string
+  center_status: 'open' | 'full' | 'closed'
+}
+
+export async function obtenerTurnoConCentro(shiftId: string, slug: string): Promise<TurnoConCentro | null> {
+  const rows = await sql<TurnoConCentro[]>`
+    SELECT
+      s.id, s.center_id, s.role, s.role_detail, s.starts_at, s.ends_at,
+      s.capacity, s.overbook_pct, s.taken,
+      c.name AS center_name, c.slug AS center_slug, c.status AS center_status
+    FROM shifts s
+    JOIN centers c ON c.id = s.center_id
+    WHERE s.id = ${shiftId} AND c.slug = ${slug} AND c.is_active = true
+    LIMIT 1
+  `
+  return rows[0] ?? null
+}
+
 export async function obtenerCentroPorSlug(slug: string): Promise<CentroConDatos | null> {
   const centers = await sql<Center[]>`
     SELECT id, slug, name, address, city, status,
