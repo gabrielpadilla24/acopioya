@@ -1,16 +1,21 @@
-import { sql } from '@/lib/db'
+import { sql }               from '@/lib/db'
 import { RegenerarTokenForm } from './RegenerarTokenForm'
+import { CopiarLinkPanel }    from './CopiarLinkPanel'
+import { alternarActivo }     from './centros/actions'
 
 export const dynamic = 'force-dynamic'
 
-type CentroAdmin = {
-  id: string
-  slug: string
-  name: string
-  city: string
-  status: 'open' | 'full' | 'closed'
-  is_active: boolean
-  admin_token: string
+type CentroFila = {
+  id:              string
+  slug:            string
+  name:            string
+  city:            string
+  status:          'open' | 'full' | 'closed'
+  is_active:       boolean
+  admin_token:     string
+  verified_at:     Date | null
+  turnos_abiertos: number
+  inscripciones:   number
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -19,59 +24,96 @@ const STATUS_LABEL: Record<string, string> = {
   closed: 'Cerrado',
 }
 
+function fmtBogota(d: Date | null): string {
+  if (!d) return '—'
+  return new Intl.DateTimeFormat('es-CO', {
+    timeZone:  'America/Bogota',
+    day:       '2-digit',
+    month:     '2-digit',
+    year:      'numeric',
+    hour:      '2-digit',
+    minute:    '2-digit',
+    hour12:    false,
+  }).format(new Date(d))
+}
+
 export default async function AdminPage() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://acopioya.vercel.app'
 
-  const centros = await sql<CentroAdmin[]>`
-    SELECT id, slug, name, city, status, is_active, admin_token
-    FROM centers
-    ORDER BY name
+  const centros = await sql<CentroFila[]>`
+    SELECT
+      c.id, c.slug, c.name, c.city, c.status, c.is_active,
+      c.admin_token, c.verified_at,
+      COUNT(DISTINCT sh.id) FILTER (
+        WHERE sh.starts_at > now() AND sh.status = 'open'
+      )::int AS turnos_abiertos,
+      COUNT(DISTINCT s.id)::int AS inscripciones
+    FROM centers c
+    LEFT JOIN shifts  sh ON sh.center_id = c.id
+    LEFT JOIN signups s  ON s.shift_id   = sh.id
+    GROUP BY
+      c.id, c.slug, c.name, c.city, c.status,
+      c.is_active, c.admin_token, c.verified_at
+    ORDER BY c.name
   `
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-950 mb-6">Admin AcopioYA</h1>
+    <main className="max-w-5xl mx-auto px-4 py-6">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-950">Admin AcopioYA</h1>
+        <a
+          href="/admin/centros/nuevo"
+          className="px-4 py-2 bg-blue-700 text-white text-sm font-bold rounded-lg hover:bg-blue-800"
+        >
+          + Nuevo centro
+        </a>
+      </div>
 
       <div className="overflow-x-auto rounded-xl border border-gray-200">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
-            <tr className="border-b border-gray-200 text-left">
-              <th className="px-4 py-3 font-semibold text-gray-700">Nombre</th>
-              <th className="px-4 py-3 font-semibold text-gray-700">Ciudad</th>
-              <th className="px-4 py-3 font-semibold text-gray-700">Estado</th>
-              <th className="px-4 py-3 font-semibold text-gray-700">Activo</th>
-              <th className="px-4 py-3 font-semibold text-gray-700">Panel</th>
-              <th className="px-4 py-3 font-semibold text-gray-700">Acciones</th>
+            <tr className="border-b border-gray-200 text-left text-xs text-gray-600">
+              <th className="px-3 py-3 font-semibold">Nombre</th>
+              <th className="px-3 py-3 font-semibold">Ciudad</th>
+              <th className="px-3 py-3 font-semibold">Estado</th>
+              <th className="px-3 py-3 font-semibold">Activo</th>
+              <th className="px-3 py-3 font-semibold">Turnos</th>
+              <th className="px-3 py-3 font-semibold">Inscritos</th>
+              <th className="px-3 py-3 font-semibold">Verificado</th>
+              <th className="px-3 py-3 font-semibold">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
-            {centros.map(c => (
-              <tr key={c.id}>
-                <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
-                <td className="px-4 py-3 text-gray-700">{c.city}</td>
-                <td className="px-4 py-3 text-gray-700">{STATUS_LABEL[c.status] ?? c.status}</td>
-                <td className="px-4 py-3 text-gray-700">{c.is_active ? 'Sí' : 'No'}</td>
-                <td className="px-4 py-3">
-                  <a
-                    href={`/panel/${c.admin_token}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-700 underline text-xs"
-                  >
-                    Ver panel →
-                  </a>
-                </td>
-                <td className="px-4 py-3 space-y-1">
-                  <a
-                    href={`/admin/centros/${c.id}`}
-                    className="block text-xs text-blue-700 underline"
-                  >
-                    Editar
-                  </a>
-                  <RegenerarTokenForm centerId={c.id} siteUrl={siteUrl} />
-                </td>
-              </tr>
-            ))}
+            {centros.map(c => {
+              const panelUrl = `${siteUrl}/panel/${c.admin_token}`
+              return (
+                <tr key={c.id} className={c.is_active ? '' : 'bg-gray-50 text-gray-500'}>
+                  <td className="px-3 py-3 font-medium text-gray-900">{c.name}</td>
+                  <td className="px-3 py-3">{c.city}</td>
+                  <td className="px-3 py-3">{STATUS_LABEL[c.status] ?? c.status}</td>
+                  <td className="px-3 py-3">{c.is_active ? 'Sí' : 'No'}</td>
+                  <td className="px-3 py-3 tabular-nums">{c.turnos_abiertos}</td>
+                  <td className="px-3 py-3 tabular-nums">{c.inscripciones}</td>
+                  <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">
+                    {fmtBogota(c.verified_at)}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex flex-col gap-1 text-xs">
+                      <a href={`/admin/centros/${c.id}`} className="text-blue-700 underline">
+                        Editar
+                      </a>
+                      <form action={alternarActivo.bind(null, c.id)}>
+                        <button type="submit" className="text-gray-600 underline">
+                          {c.is_active ? 'Desactivar' : 'Activar'}
+                        </button>
+                      </form>
+                      <CopiarLinkPanel url={panelUrl} />
+                      <RegenerarTokenForm centerId={c.id} siteUrl={siteUrl} />
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
