@@ -61,12 +61,20 @@ export default async function AdminPage() {
     <main className="max-w-5xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-950">Admin AcopioYA</h1>
-        <a
-          href="/admin/centros/nuevo"
-          className="px-4 py-2 bg-blue-700 text-white text-sm font-bold rounded-lg hover:bg-blue-800"
-        >
-          + Nuevo centro
-        </a>
+        <div className="flex gap-2">
+          <a
+            href="/admin/metricas"
+            className="px-4 py-2 bg-gray-700 text-white text-sm font-bold rounded-lg hover:bg-gray-800"
+          >
+            Métricas
+          </a>
+          <a
+            href="/admin/centros/nuevo"
+            className="px-4 py-2 bg-blue-700 text-white text-sm font-bold rounded-lg hover:bg-blue-800"
+          >
+            + Nuevo centro
+          </a>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-gray-200">
