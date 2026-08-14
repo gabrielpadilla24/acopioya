@@ -1,7 +1,7 @@
 import { notFound }                                          from 'next/navigation'
 import { requiereSesion }                                     from '@/lib/auth'
 import { obtenerCentroPorId, type ShiftConConteos }           from '@/lib/queries'
-import { CATEGORIAS_NECESIDADES, ROLES, type Nivel }          from '@/lib/constants'
+import { CATEGORIAS_NECESIDADES, ROLES }                      from '@/lib/constants'
 import { rangoHorario, esHoy, esMañana, formatearFecha }     from '@/lib/time'
 import {
   salir,
@@ -13,26 +13,12 @@ import {
   cerrarTurno,
   eliminarTurno,
 } from './actions'
-import { ConfirmButton }  from './ConfirmButton'
-import { FormCrearTurno } from './FormCrearTurno'
+import { ConfirmButton }    from './ConfirmButton'
+import { FormCrearTurno }   from './FormCrearTurno'
+import { EstadoControl }    from './EstadoControl'
+import { NecesidadesList }  from './NecesidadesList'
 
 export const dynamic = 'force-dynamic'
-
-const STATUS_UI = {
-  open:   { label: 'Abierto',  activeCls: 'bg-tertiary text-on-tertiary font-bold' },
-  full:   { label: 'Lleno',    activeCls: 'bg-warning text-on-primary font-bold' },
-  closed: { label: 'Cerrado',  activeCls: 'bg-primary text-on-primary font-bold' },
-} as const
-
-// Labels de nivel para el panel — sin emoji, accesibles por texto
-const NIVEL_UI: Record<string, { label: string; activeCls: string }> = {
-  urgent:       { label: 'Urgente',        activeCls: 'bg-primary text-on-primary' },
-  needed:       { label: 'Se necesita',    activeCls: 'bg-warning text-on-primary' },
-  enough:       { label: 'Suficiente',     activeCls: 'bg-tertiary text-on-tertiary' },
-  do_not_bring: { label: 'No se necesita', activeCls: 'bg-on-surface text-surface-container-lowest' },
-}
-
-const NIVELES_ORDEN: Nivel[] = ['urgent', 'needed', 'enough', 'do_not_bring']
 
 type Props = {
   searchParams: Promise<{ msg?: string }>
@@ -200,26 +186,10 @@ export default async function PanelPage({ searchParams }: Props) {
               <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide mb-2">
                 Estado del centro
               </p>
-              <div className="flex gap-2">
-                {(['open', 'full', 'closed'] as const).map(estado => {
-                  const ui       = STATUS_UI[estado]
-                  const isActive = centro.status === estado
-                  return (
-                    <form key={estado} action={cambiarEstadoCentro.bind(null, estado)} className="flex-1">
-                      <button
-                        type="submit"
-                        className={`w-full min-h-[52px] rounded text-sm transition-colors ${
-                          isActive
-                            ? ui.activeCls
-                            : 'bg-surface-container text-on-surface-variant border border-outline-variant hover:bg-surface-container'
-                        }`}
-                      >
-                        {ui.label}
-                      </button>
-                    </form>
-                  )
-                })}
-              </div>
+              <EstadoControl
+                status={centro.status as 'open' | 'full' | 'closed'}
+                cambiar={cambiarEstadoCentro}
+              />
 
               <div className="mt-4 space-y-2">
                 <a
@@ -253,71 +223,13 @@ export default async function PanelPage({ searchParams }: Props) {
             {/* Necesidades */}
             <section className="bg-surface-container-lowest border border-outline-variant rounded p-4">
               <h2 className="text-base font-bold text-on-surface mb-3">Necesidades</h2>
-
-              {centro.needs.length === 0 && (
-                <p className="text-sm text-on-surface-variant mb-3">No hay categorías añadidas aún.</p>
-              )}
-
-              <div className="space-y-3">
-                {centro.needs.map(need => (
-                  <div key={need.id} className="border border-outline-variant rounded p-3 space-y-2">
-                    {/* Nombre + botón eliminar */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium text-on-surface capitalize">{need.category}</span>
-                      <ConfirmButton
-                        action={eliminarNecesidad.bind(null, need.id)}
-                        confirmText={`¿Eliminar la categoría "${need.category}"?`}
-                        aria-label={`Eliminar ${need.category}`}
-                        className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded border border-outline-variant text-xs text-on-surface-variant hover:bg-error-container hover:text-error hover:border-error"
-                      >
-                        Quitar
-                      </ConfirmButton>
-                    </div>
-
-                    {/* Control de segmento con texto — 2×2 en móvil, 1×4 en sm+ */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-outline-variant rounded overflow-hidden">
-                      {NIVELES_ORDEN.map(nivel => {
-                        const { label, activeCls } = NIVEL_UI[nivel]
-                        const isActive = need.level === nivel
-                        return (
-                          <form key={nivel} action={cambiarNivelNecesidad.bind(null, need.id, nivel)}>
-                            <button
-                              type="submit"
-                              className={`w-full min-h-[44px] px-1 py-2 text-xs font-medium leading-tight text-center transition-colors ${
-                                isActive
-                                  ? activeCls
-                                  : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container'
-                              }`}
-                            >
-                              {label}
-                            </button>
-                          </form>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Agregar categoría */}
-              <form action={agregarNecesidad} className="mt-4 flex gap-2">
-                <input
-                  name="categoria"
-                  list="cats-lista"
-                  required
-                  placeholder="Nueva categoría…"
-                  className="flex-1 min-h-[44px] border border-outline-variant rounded px-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary"
-                />
-                <datalist id="cats-lista">
-                  {categoriasDisponibles.map(c => <option key={c} value={c} />)}
-                </datalist>
-                <button
-                  type="submit"
-                  className="px-4 min-h-[44px] bg-secondary text-on-primary text-sm font-bold rounded whitespace-nowrap"
-                >
-                  Agregar
-                </button>
-              </form>
+              <NecesidadesList
+                needs={centro.needs.map(n => ({ id: n.id, category: n.category, level: n.level }))}
+                categoriasDisponibles={categoriasDisponibles}
+                cambiarNivel={cambiarNivelNecesidad}
+                eliminar={eliminarNecesidad}
+                agregar={agregarNecesidad}
+              />
             </section>
 
           </div>

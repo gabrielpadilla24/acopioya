@@ -25,16 +25,10 @@ export async function cambiarEstadoCentro(
   estado: string,
   _formData: FormData,
 ): Promise<void> {
-  const t0 = Date.now()
   const centro = await getCentroDeSession()
-  const t1 = Date.now(); console.log(`[timing] sesion+getCentro: ${t1-t0}ms`)
   await sql`UPDATE centers SET status = ${estado}, updated_at = now() WHERE id = ${centro.id}`
-  const t2 = Date.now(); console.log(`[timing] UPDATE bd: ${t2-t1}ms`)
   revalidatePath('/c/' + centro.slug)
-  const t3 = Date.now(); console.log(`[timing] revalidate /c/slug: ${t3-t2}ms`)
   revalidatePath('/')
-  const t4 = Date.now(); console.log(`[timing] revalidate /: ${t4-t3}ms`)
-  console.log(`[timing] TOTAL (sin redirect): ${t4-t0}ms`)
   redirect('/panel')
 }
 

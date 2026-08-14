@@ -2,6 +2,15 @@
 
 import { useTransition } from 'react'
 
+function Spinner() {
+  return (
+    <span
+      className="inline-block w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"
+      aria-hidden="true"
+    />
+  )
+}
+
 export function ConfirmButton({
   action,
   confirmText,
@@ -9,11 +18,11 @@ export function ConfirmButton({
   'aria-label': ariaLabel,
   children,
 }: {
-  action:       () => Promise<void>
-  confirmText:  string
-  className?:   string
+  action:        () => Promise<void>
+  confirmText:   string
+  className?:    string
   'aria-label'?: string
-  children:     React.ReactNode
+  children:      React.ReactNode
 }) {
   const [isPending, startTransition] = useTransition()
 
@@ -28,7 +37,7 @@ export function ConfirmButton({
         }
       }}
     >
-      {isPending ? '…' : children}
+      {isPending ? <Spinner /> : children}
     </button>
   )
 }
