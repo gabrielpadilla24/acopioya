@@ -125,6 +125,63 @@ export async function listarSlugsActivos(): Promise<{ slug: string }[]> {
   `
 }
 
+export type SignupConTurno = {
+  signup_id: string
+  name: string
+  phone: string | null
+  state: 'inscrito' | 'confirmado' | 'cancelado' | 'liberado' | 'asistio'
+  manage_token: string
+  shift_id: string
+  role: string
+  role_detail: string | null
+  starts_at: Date
+  ends_at: Date
+  capacity: number
+  overbook_pct: number
+  taken: number
+  whatsapp_group_url: string | null
+  center_id: string
+  center_name: string
+  center_slug: string
+  center_address: string
+  center_city: string
+  center_status: 'open' | 'full' | 'closed'
+  center_whatsapp: string | null
+}
+
+export async function obtenerSignupPorToken(token: string): Promise<SignupConTurno | null> {
+  const rows = await sql<SignupConTurno[]>`
+    SELECT
+      sg.id          AS signup_id,
+      sg.name,
+      sg.phone,
+      sg.state,
+      sg.manage_token,
+      sh.id          AS shift_id,
+      sh.role,
+      sh.role_detail,
+      sh.starts_at,
+      sh.ends_at,
+      sh.capacity,
+      sh.overbook_pct,
+      sh.taken,
+      sh.whatsapp_group_url,
+      c.id           AS center_id,
+      c.name         AS center_name,
+      c.slug         AS center_slug,
+      c.address      AS center_address,
+      c.city         AS center_city,
+      c.status       AS center_status,
+      c.whatsapp_contact AS center_whatsapp
+    FROM signups sg
+    JOIN shifts sh ON sh.id = sg.shift_id
+    JOIN centers c ON c.id  = sh.center_id
+    WHERE sg.manage_token = ${token}
+    LIMIT 1
+  `
+  return rows[0] ?? null
+}
+
 export type TurnoConCentro = Shift & {
   center_name: string
   center_slug: string
