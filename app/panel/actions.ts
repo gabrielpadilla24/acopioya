@@ -96,7 +96,10 @@ export async function crearTurno(
   const capacidad    = capacidadRaw ? parseInt(capacidadRaw, 10) : null
   const overbookPct  = parseInt(formData.get('overbook_pct') as string || '0', 10)
   const waGroupUrl   = (formData.get('wa_group_url')  as string ?? '').trim() || null
-  const signupMode   = formData.get('signup_mode') === 'contacto' ? 'contacto' : 'self'
+  const rawMode    = (formData.get('signup_mode') as string) ?? ''
+  const signupMode = (['self', 'contacto', 'abierto'] as const).includes(rawMode as 'self' | 'contacto' | 'abierto')
+    ? (rawMode as 'self' | 'contacto' | 'abierto')
+    : 'self'
 
   if (!rol || !fecha || !horaInicio || !horaFin) {
     return { error: 'Completa los campos obligatorios (rol, fecha, horario).' }

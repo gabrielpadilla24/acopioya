@@ -49,7 +49,7 @@ export async function inscribir(
     return { error: 'Demasiados intentos con este número. Espera un momento e inténtalo de nuevo.' }
   }
 
-  // Validación servidor: rechazar turnos en modo contacto (la UI tampoco los muestra)
+  // Validación servidor: solo 'self' acepta inscripciones (ni 'contacto' ni 'abierto')
   const [modeRow] = await sql<{ signup_mode: string }[]>`
     SELECT signup_mode FROM shifts WHERE id = ${shiftId} LIMIT 1
   `

@@ -16,8 +16,8 @@ export default async function TurnoPage({ params }: Props) {
 
   if (!turno) notFound()
 
-  // Los turnos en modo contacto no tienen inscripción en línea
-  if (turno.signup_mode === 'contacto') redirect(`/c/${slug}`)
+  // Turnos no-self (contacto, abierto) no tienen inscripción en línea
+  if (turno.signup_mode !== 'self') redirect(`/c/${slug}`)
 
   const ahora     = new Date()
   const terminado = new Date(turno.ends_at) <= ahora

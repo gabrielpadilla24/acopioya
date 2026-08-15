@@ -318,6 +318,42 @@ export default async function CentroPage({ params }: Props) {
                       )
                     }
 
+                    if (s.signup_mode === 'abierto') {
+                      const waNum = centro.whatsapp_contact?.replace(/[^\d]/g, '')
+                      return (
+                        <div key={s.id} className="border border-outline-variant rounded p-4">
+                          <p className="font-bold text-on-surface">
+                            {rolLabel}
+                            {s.role_detail && (
+                              <span className="font-normal text-on-surface-variant"> — {s.role_detail}</span>
+                            )}
+                          </p>
+                          <p className="text-on-surface text-sm mt-1">
+                            {etiquetaTurno(s.starts_at, s.ends_at)}
+                          </p>
+                          <div className="mt-3 bg-tertiary-container rounded p-3">
+                            <p className="text-sm text-on-tertiary-container">
+                              No necesitas inscribirte. Llega en el horario del turno y preséntate con el coordinador.
+                            </p>
+                            {waNum && (
+                              <p className="text-xs text-on-tertiary-container mt-2">
+                                ¿Dudas antes de ir?{' '}
+                                <a
+                                  href={`https://wa.me/${waNum}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline"
+                                >
+                                  Escríbeles por WhatsApp
+                                </a>
+                                .
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    }
+
                     // capacity nunca es null en modo self (CHECK shifts_capacity_self_check)
                     const cap   = s.capacity!
                     const lleno = s.taken >= cap

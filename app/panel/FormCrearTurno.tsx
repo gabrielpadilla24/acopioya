@@ -7,7 +7,7 @@ import { ROLES, type Rol }          from '@/lib/constants'
 export function FormCrearTurno({ todayBogota }: { todayBogota: string }) {
   const [state, formAction, pending] = useActionState(crearTurno, null)
   const [showDetail, setShowDetail]  = useState(false)
-  const [signupMode, setSignupMode]  = useState<'self' | 'contacto'>('self')
+  const [signupMode, setSignupMode]  = useState<'self' | 'contacto' | 'abierto'>('self')
 
   return (
     <form action={formAction} className="space-y-3">
@@ -99,7 +99,18 @@ export function FormCrearTurno({ todayBogota }: { todayBogota: string }) {
               onChange={() => setSignupMode('contacto')}
               className="mt-0.5"
             />
-            <span className="text-sm text-on-surface">Yo coordino a los voluntarios por WhatsApp</span>
+            <span className="text-sm text-on-surface">Yo los coordino por WhatsApp</span>
+          </label>
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="signup_mode"
+              value="abierto"
+              checked={signupMode === 'abierto'}
+              onChange={() => setSignupMode('abierto')}
+              className="mt-0.5"
+            />
+            <span className="text-sm text-on-surface">Que lleguen sin avisar</span>
           </label>
         </div>
       </div>
@@ -107,17 +118,17 @@ export function FormCrearTurno({ todayBogota }: { todayBogota: string }) {
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="block text-xs font-medium text-on-surface-variant mb-1">
-            {signupMode === 'contacto' ? '¿Cuántos voluntarios necesitas? (opcional)' : 'Cupos *'}
+            {signupMode !== 'self' ? '¿Cuántos voluntarios necesitas? (opcional)' : 'Cupos *'}
           </label>
           <input
             name="capacidad"
             type="number"
             min={1}
             required={signupMode === 'self'}
-            placeholder={signupMode === 'contacto' ? '' : '20'}
+            placeholder={signupMode === 'self' ? '20' : ''}
             className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary"
           />
-          {signupMode === 'contacto' && (
+          {signupMode !== 'self' && (
             <p className="text-xs text-on-surface-variant mt-1">
               Déjalo vacío si prefieres no fijar un número.
             </p>

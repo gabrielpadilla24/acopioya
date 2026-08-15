@@ -178,11 +178,18 @@ export default async function TurnoPanelPage({ params }: Props) {
           })}
         </section>
 
-        {/* ── NOTA MODO CONTACTO ──────────────────────────────────────── */}
+        {/* ── NOTA MODO NO-SELF ───────────────────────────────────────── */}
         {turno.signup_mode === 'contacto' && (
           <section className="border border-secondary-container bg-secondary-container rounded p-4">
             <p className="text-sm text-on-secondary-container font-medium">
               Este turno lo coordinas por WhatsApp. Las personas que lleguen las registras acá como walk-in.
+            </p>
+          </section>
+        )}
+        {turno.signup_mode === 'abierto' && (
+          <section className="border border-tertiary-container bg-tertiary-container rounded p-4">
+            <p className="text-sm text-on-tertiary-container font-medium">
+              Este turno es de entrada libre. Registra acá a quienes lleguen.
             </p>
           </section>
         )}
@@ -194,7 +201,7 @@ export default async function TurnoPanelPage({ params }: Props) {
         </section>
 
         {/* ── LIBERACIÓN MANUAL (solo turnos self) ────────────────────── */}
-        {turno.signup_mode !== 'contacto' && (
+        {turno.signup_mode === 'self' && (
           <section className="border border-outline-variant rounded p-4 bg-surface-container-lowest">
             <h2 className="text-base font-bold text-on-surface mb-1">Liberación manual</h2>
             <p className="text-xs text-on-surface-variant mb-3">
