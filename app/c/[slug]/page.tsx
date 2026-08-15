@@ -191,6 +191,16 @@ export default async function CentroPage({ params }: Props) {
                 </a>
               )}
 
+              {centro.phone && (
+                <a
+                  href={`tel:${centro.phone.replace(/\s/g, '')}`}
+                  className="flex items-center justify-center gap-2 min-h-[48px] w-full
+                             border border-outline-variant rounded bg-surface-container-lowest px-4 font-medium text-on-surface"
+                >
+                  📞 Llamar antes de ir
+                </a>
+              )}
+
               {centro.coordinator_name && (
                 <p className="text-on-surface-variant text-sm">
                   Coordinador/a: <span className="font-medium text-on-surface">{centro.coordinator_name}</span>
