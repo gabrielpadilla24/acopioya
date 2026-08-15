@@ -9,6 +9,7 @@ import { marcarAsistencia }                        from './actions'
 import { CopiarLista }                             from './CopiarLista'
 import { LiberarAhora }                            from './LiberarAhora'
 import { FormWalkIn }                              from './FormWalkIn'
+import { QuitarWalkIn }                            from './QuitarWalkIn'
 
 export const dynamic = 'force-dynamic'
 
@@ -89,6 +90,11 @@ export default async function TurnoPanelPage({ params }: Props) {
             {liberados  > 0 && <span> · {liberados} liberados</span>}
             {asistieron > 0 && <span> · {asistieron} asistieron</span>}
           </p>
+          {turno.taken > turno.capacity && (
+            <p className="mt-2 text-sm text-on-warning-container bg-warning-container border border-warning rounded px-3 py-2">
+              Este turno está por encima de su capacidad ({turno.taken} de {turno.capacity}).
+            </p>
+          )}
         </section>
 
         {/* ── COPIAR LISTA ────────────────────────────────────────────── */}
@@ -159,6 +165,10 @@ export default async function TurnoPanelPage({ params }: Props) {
                         Marcó asistencia
                       </button>
                     </form>
+                  )}
+
+                  {signup.is_walk_in && signup.state === 'asistio' && (
+                    <QuitarWalkIn signupId={signup.id} nombre={signup.name} />
                   )}
                 </div>
               </div>

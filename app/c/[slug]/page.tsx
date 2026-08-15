@@ -265,7 +265,7 @@ export default async function CentroPage({ params }: Props) {
                             />
                           </div>
                           <p className="text-sm text-on-surface-variant mt-1">
-                            {s.taken} de {s.capacity} cupos ocupados
+                            {Math.min(s.taken, s.capacity)} de {s.capacity} cupos ocupados
                           </p>
                         </div>
 
