@@ -218,59 +218,6 @@ export type CentroPanelDetalle = Center & {
   shifts: ShiftConConteos[]
 }
 
-export async function obtenerCentroPorAdminToken(token: string): Promise<CentroPanelDetalle | null> {
-  const centers = await sql<Center[]>`
-    SELECT id, slug, name, address, city, status,
-           coordinator_name, lat, lng, whatsapp_contact, schedule_note, is_active
-    FROM centers
-    WHERE admin_token = ${token}
-    LIMIT 1
-  `
-  if (centers.length === 0) return null
-  const center = centers[0]
-
-  const [needs, shifts] = await Promise.all([
-    sql<Need[]>`
-      SELECT id, center_id, category, level, note, updated_at
-      FROM needs
-      WHERE center_id = ${center.id}
-      ORDER BY CASE level
-        WHEN 'urgent'       THEN 1
-        WHEN 'needed'       THEN 2
-        WHEN 'do_not_bring' THEN 3
-        WHEN 'enough'       THEN 4
-        ELSE 5
-      END, category
-    `,
-    sql<ShiftConConteos[]>`
-      SELECT
-        sh.id, sh.center_id, sh.role, sh.role_detail,
-        sh.starts_at, sh.ends_at,
-        sh.capacity, sh.overbook_pct, sh.taken,
-        sh.whatsapp_group_url, sh.status,
-        COALESCE(sg.confirmados, 0)::int AS confirmados,
-        COALESCE(sg.inscritos,   0)::int AS inscritos,
-        COALESCE(sg.liberados,   0)::int AS liberados,
-        COALESCE(sg.asistieron,  0)::int AS asistieron
-      FROM shifts sh
-      LEFT JOIN (
-        SELECT shift_id,
-          COUNT(*) FILTER (WHERE state = 'confirmado')::int AS confirmados,
-          COUNT(*) FILTER (WHERE state = 'inscrito')::int   AS inscritos,
-          COUNT(*) FILTER (WHERE state = 'liberado')::int   AS liberados,
-          COUNT(*) FILTER (WHERE state = 'asistio')::int    AS asistieron
-        FROM signups
-        GROUP BY shift_id
-      ) sg ON sg.shift_id = sh.id
-      WHERE sh.center_id = ${center.id}
-        AND sh.ends_at > (date_trunc('day', now() AT TIME ZONE 'America/Bogota') AT TIME ZONE 'America/Bogota')
-      ORDER BY sh.starts_at
-    `,
-  ])
-
-  return { ...center, needs, shifts }
-}
-
 // ── tipos turno panel ─────────────────────────────────────────────────────────
 
 export type SignupParaPanel = {
@@ -303,46 +250,7 @@ export type TurnoParaPanel = {
   signups:            SignupParaPanel[]
 }
 
-export async function obtenerTurnoParaPanel(
-  adminToken: string,
-  shiftId: string,
-): Promise<TurnoParaPanel | null> {
-  const shifts = await sql<Omit<TurnoParaPanel, 'signups'>[]>`
-    SELECT
-      sh.id, sh.center_id, sh.role, sh.role_detail,
-      sh.starts_at, sh.ends_at, sh.capacity, sh.overbook_pct, sh.taken,
-      sh.status, sh.whatsapp_group_url,
-      c.name   AS center_name,
-      c.slug   AS center_slug,
-      c.status AS center_status
-    FROM shifts sh
-    JOIN centers c ON c.id = sh.center_id
-    WHERE sh.id = ${shiftId}
-      AND c.admin_token = ${adminToken}
-    LIMIT 1
-  `
-  if (shifts.length === 0) return null
-  const shift = shifts[0]
-
-  const signups = await sql<SignupParaPanel[]>`
-    SELECT id, name, phone, state, manage_token,
-           created_at, checked_in_at, checkin_method, is_walk_in
-    FROM signups
-    WHERE shift_id = ${shiftId}
-    ORDER BY CASE state
-      WHEN 'confirmado' THEN 1
-      WHEN 'inscrito'   THEN 2
-      WHEN 'asistio'    THEN 3
-      WHEN 'liberado'   THEN 4
-      WHEN 'cancelado'  THEN 5
-      ELSE 6
-    END, created_at
-  `
-
-  return { ...shift, signups }
-}
-
-// ── session-based panel (no admin_token in URL) ──────────────────────────────
+// ── session-based panel ──────────────────────────────────────────────────────
 
 export async function obtenerCentroPorId(centerId: string): Promise<CentroPanelDetalle | null> {
   const centers = await sql<Center[]>`

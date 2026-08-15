@@ -55,13 +55,12 @@ export async function registrarLlegada(
     ends_at:          Date
     coordinator_name: string | null
     center_slug:      string
-    admin_token:      string
   }[]>`
     SELECT
       sg.id, sg.name, sg.state,
       sh.id           AS shift_id,
       sh.role, sh.role_detail, sh.starts_at, sh.ends_at,
-      c.coordinator_name, c.slug AS center_slug, c.admin_token
+      c.coordinator_name, c.slug AS center_slug
     FROM signups sg
     JOIN shifts  sh ON sh.id = sg.shift_id
     JOIN centers c  ON c.id  = sh.center_id
@@ -91,8 +90,8 @@ export async function registrarLlegada(
   `
 
   // ── 6. Revalidar panel y página pública ──────────────────────────────────
-  revalidatePath('/panel/' + sg.admin_token + '/turno/' + sg.shift_id)
-  revalidatePath('/panel/' + sg.admin_token)
+  revalidatePath('/panel/turno/' + sg.shift_id)
+  revalidatePath('/panel')
   revalidatePath('/c/' + sg.center_slug)
 
   // ── 7. Éxito — solo datos de la persona que hizo el check-in ────────────

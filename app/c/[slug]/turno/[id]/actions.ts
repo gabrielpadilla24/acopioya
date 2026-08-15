@@ -1,10 +1,12 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { sql } from '@/lib/db'
+import { headers }           from 'next/headers'
+import { revalidatePath }    from 'next/cache'
+import { redirect }          from 'next/navigation'
+import { sql }               from '@/lib/db'
 import { normalizarCelular } from '@/lib/phone'
 import { generarTokenVoluntario } from '@/lib/tokens'
+import { limitar }           from '@/lib/ratelimit'
 
 export type ActionState = { error: string } | null
 
@@ -12,6 +14,14 @@ export async function inscribir(
   _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  const hdrs = await headers()
+  const ip   = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim()
+           ?? hdrs.get('x-real-ip')
+           ?? 'unknown'
+  if (!limitar('inscribir:ip:' + ip, 30, 60 * 60 * 1000)) {
+    return { error: 'Demasiados intentos desde tu red. Espera un momento e inténtalo de nuevo.' }
+  }
+
   const slug    = formData.get('slug')     as string
   const shiftId = formData.get('shift_id') as string
 

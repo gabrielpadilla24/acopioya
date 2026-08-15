@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { liberarCuposNoConfirmados } from '@/lib/liberar'
 
 export async function GET(request: Request) {
