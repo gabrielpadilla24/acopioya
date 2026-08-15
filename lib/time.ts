@@ -74,6 +74,17 @@ export function formatearFecha(d: Date): string {
   return `${get('weekday')} ${get('day')} ${get('month')}`
 }
 
+export function formatearDiaMes(d: Date): string {
+  const parts = new Intl.DateTimeFormat(LOCALE, {
+    timeZone: TZ,
+    day: 'numeric',
+    month: 'short',
+  }).formatToParts(d)
+  const day   = parts.find(p => p.type === 'day')?.value ?? ''
+  const month = (parts.find(p => p.type === 'month')?.value ?? '').replace(/\.$/, '')
+  return `${day} ${month}`
+}
+
 // Para columnas DATE de postgres.js: se devuelven como midnight UTC.
 // Usar timeZone: 'UTC' evita que el día retroceda al anterior en UTC-5.
 export function formatearFechaSola(d: Date): string {

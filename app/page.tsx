@@ -1,7 +1,7 @@
 export const revalidate = 60
 
 import { obtenerCentrosParaLanding, type CentroParaLanding } from '@/lib/queries'
-import { haceCuanto } from '@/lib/time'
+import { haceCuanto, formatearDiaMes } from '@/lib/time'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import MapaWrapper from './components/MapaWrapper'
@@ -20,26 +20,38 @@ const STATUS_LABEL: Record<string, string> = {
 
 const PILL: Record<string, string> = {
   urgent: 'bg-primary text-on-primary rounded-full px-2 py-0.5 text-xs font-semibold',
-  needed: 'bg-warning-container border border-warning text-on-warning-container rounded-full px-2 py-0.5 text-xs font-semibold',
+  needed: 'bg-surface-container border border-outline-variant text-on-surface-variant rounded-full px-2 py-0.5 text-xs font-semibold',
   enough: 'bg-tertiary-container text-on-tertiary-container rounded-full px-2 py-0.5 text-xs font-semibold',
 }
 
+const PILL_MAS = 'bg-surface-container border border-outline-variant text-on-surface-variant rounded-full px-2 py-0.5 text-xs font-semibold'
+
 function TarjetaCentro({ c }: { c: CentroParaLanding }) {
-  const pildoras = c.needs.filter(n => n.level !== 'do_not_bring').slice(0, 7)
+  const todas    = c.needs.filter(n => n.level !== 'do_not_bring')
+  const pildoras = todas.slice(0, 3)
+  const masCount = todas.length - pildoras.length
 
   return (
     <a
       href={`/c/${c.slug}`}
       className="flex flex-col border border-outline-variant rounded bg-surface-container-lowest p-5 hover:shadow-md transition-shadow"
     >
-      <div className="flex items-start justify-between gap-2">
+      {/* Nombre + estado — min-h para alinear los bloques de una y dos líneas */}
+      <div className="flex items-start justify-between gap-2 min-h-[3rem]">
         <p className="font-bold text-on-surface leading-tight">{c.name}</p>
         <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded ${STATUS_BADGE[c.status] ?? STATUS_BADGE.closed}`}>
           {STATUS_LABEL[c.status] ?? c.status}
         </span>
       </div>
-      <p className="text-on-surface-variant text-sm mt-0.5">{c.city}</p>
 
+      {/* Ciudad + dirección + horario */}
+      <p className="text-on-surface-variant text-sm mt-0.5">{c.city}</p>
+      <p className="text-on-surface-variant text-sm mt-0.5 truncate">{c.address}</p>
+      {c.schedule_note && (
+        <p className="text-on-surface-variant text-sm mt-0.5 truncate">{c.schedule_note}</p>
+      )}
+
+      {/* Píldoras — máximo 3, el resto como "+N más" */}
       {pildoras.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {pildoras.map(n => (
@@ -47,18 +59,26 @@ function TarjetaCentro({ c }: { c: CentroParaLanding }) {
               {n.category}
             </span>
           ))}
+          {masCount > 0 && (
+            <span className={PILL_MAS}>+{masCount} más</span>
+          )}
         </div>
       )}
 
-      <div className="mt-auto pt-3 flex items-center justify-between">
-        {c.last_need_update ? (
-          <p className="text-xs font-mono text-on-surface-variant">
+      {/* Pie anclado abajo */}
+      <div className="mt-auto pt-3 flex items-center justify-between gap-2">
+        {c.reclamado && c.last_need_update ? (
+          <p className="text-xs font-mono text-on-surface-variant shrink-0">
             Act. {haceCuanto(new Date(c.last_need_update))}
+          </p>
+        ) : c.verified_at ? (
+          <p className="text-xs font-mono text-on-surface-variant shrink-0">
+            Fuente oficial · {formatearDiaMes(new Date(c.verified_at))}
           </p>
         ) : (
           <span />
         )}
-        <p className="text-primary text-sm font-semibold">Ver detalles →</p>
+        <p className="text-primary text-sm font-semibold shrink-0">Ver detalles →</p>
       </div>
     </a>
   )

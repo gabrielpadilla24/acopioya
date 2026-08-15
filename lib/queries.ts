@@ -384,6 +384,8 @@ export type CentroParaLanding = {
   urgent_count:     number
   available_shifts: number
   last_need_update: Date | null
+  verified_at:      Date | null
+  reclamado:        boolean
   needs:            NecesidadPublica[]
 }
 
@@ -400,6 +402,11 @@ export async function obtenerCentrosParaLanding(): Promise<CentroParaLanding[]> 
       COALESCE(ns.urgent_count, 0)::int      AS urgent_count,
       COALESCE(avail.available_shifts, 0)::int AS available_shifts,
       ns.last_need_update,
+      c.verified_at,
+      EXISTS(
+        SELECT 1 FROM coordinator_users cu
+        WHERE cu.center_id = c.id AND cu.password_hash IS NOT NULL
+      ) AS reclamado,
       COALESCE(ns.needs_agg, '[]'::json)     AS needs
     FROM centers c
     LEFT JOIN (
