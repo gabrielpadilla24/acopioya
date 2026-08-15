@@ -1,7 +1,11 @@
 // Rate limiter en memoria con ventana fija por clave.
-// En serverless hay varias instancias y cada una tiene su propio Map →
-// el límite es best-effort y no es global exacto. Suficiente para el MVP:
-// disuade ataques simples sin necesidad de Redis.
+//
+// LIMITACIÓN CONOCIDA: Vercel distribuye el tráfico entre varias instancias
+// serverless y cada una tiene su propio Map independiente. Los contadores NO
+// se comparten entre instancias — el límite es aproximado ("best-effort").
+// Sirve para disuadir torpeza y bots básicos, NO contra un atacante decidido.
+// Cuando se necesite un límite global exacto, reemplazar por Upstash Redis
+// (misma interfaz, un cliente HTTP en lugar del Map).
 
 type Bucket = { count: number; windowStart: number }
 

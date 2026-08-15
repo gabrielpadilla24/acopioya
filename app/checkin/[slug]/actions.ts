@@ -1,6 +1,5 @@
 'use server'
 
-import { headers }         from 'next/headers'
 import { revalidatePath }  from 'next/cache'
 import { sql }             from '@/lib/db'
 import { normalizarCelular } from '@/lib/phone'
@@ -20,16 +19,7 @@ export async function registrarLlegada(
   _prevState: CheckinState,
   formData: FormData,
 ): Promise<CheckinState> {
-  // ── 1. Rate limit por IP ─────────────────────────────────────────────────
-  const hdrs = await headers()
-  const ip   = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim()
-           ?? hdrs.get('x-real-ip')
-           ?? 'unknown'
-  if (!limitar('ip:' + ip, 20, 60 * 60 * 1000)) {
-    return { status: 'error', message: RATE_MSG }
-  }
-
-  // ── 2. Normalizar celular ────────────────────────────────────────────────
+  // ── 1. Normalizar celular ────────────────────────────────────────────────
   const celularRaw    = (formData.get('celular') as string ?? '').trim()
   const celularResult = normalizarCelular(celularRaw)
   if (!celularResult.ok) {
@@ -37,12 +27,12 @@ export async function registrarLlegada(
   }
   const phone = celularResult.valor
 
-  // ── 3. Rate limit por celular (oráculo: limita quién puede probar qué) ──
-  if (!limitar('phone:' + phone, 5, 60 * 60 * 1000)) {
+  // ── 2. Rate limit por celular — impide enumerar inscripciones ajenas ────
+  if (!limitar('phone:' + phone, 10, 15 * 60 * 1000)) {
     return { status: 'error', message: RATE_MSG }
   }
 
-  // ── 4. Buscar signup ─────────────────────────────────────────────────────
+  // ── 3. Buscar signup ─────────────────────────────────────────────────────
   // Incluye 'asistio' para que un doble toque muestre éxito sin romper nada.
   const rows = await sql<{
     id:               string
@@ -81,7 +71,7 @@ export async function registrarLlegada(
 
   const sg = rows[0]
 
-  // ── 5. Marcar asistencia (idempotente) ───────────────────────────────────
+  // ── 4. Marcar asistencia (idempotente) ───────────────────────────────────
   await sql`
     UPDATE signups
     SET state = 'asistio', checked_in_at = now(), checkin_method = 'qr'
@@ -89,12 +79,12 @@ export async function registrarLlegada(
       AND state NOT IN ('asistio', 'cancelado')
   `
 
-  // ── 6. Revalidar panel y página pública ──────────────────────────────────
+  // ── 5. Revalidar panel y página pública ──────────────────────────────────
   revalidatePath('/panel/turno/' + sg.shift_id)
   revalidatePath('/panel')
   revalidatePath('/c/' + sg.center_slug)
 
-  // ── 7. Éxito — solo datos de la persona que hizo el check-in ────────────
+  // ── 6. Éxito — solo datos de la persona que hizo el check-in ────────────
   const rolLabel = (ROLES as Record<string, string>)[sg.role] ?? sg.role
   const detalle  = sg.role_detail ? ` — ${sg.role_detail}` : ''
 

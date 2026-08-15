@@ -1,6 +1,5 @@
 'use server'
 
-import { headers }           from 'next/headers'
 import { revalidatePath }    from 'next/cache'
 import { redirect }          from 'next/navigation'
 import { sql }               from '@/lib/db'
@@ -14,14 +13,6 @@ export async function inscribir(
   _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  const hdrs = await headers()
-  const ip   = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim()
-           ?? hdrs.get('x-real-ip')
-           ?? 'unknown'
-  if (!limitar('inscribir:ip:' + ip, 30, 60 * 60 * 1000)) {
-    return { error: 'Demasiados intentos desde tu red. Espera un momento e inténtalo de nuevo.' }
-  }
-
   const slug    = formData.get('slug')     as string
   const shiftId = formData.get('shift_id') as string
 
@@ -48,6 +39,15 @@ export async function inscribir(
     return { error: celularResult.error }
   }
   const phone = celularResult.valor
+
+  // Límite por celular normalizado: 5 inscripciones/hora.
+  // NO se limita por IP: en Colombia el CGNAT comparte una IP entre miles de
+  // usuarios (operadores como Claro, Movistar, Tigo), y en eventos masivos
+  // todo el estadio sale por la misma antena. Un límite por IP bloquearía
+  // voluntarios legítimos sin frenar ningún abuso real.
+  if (!limitar('inscribir:phone:' + phone, 5, 60 * 60 * 1000)) {
+    return { error: 'Demasiados intentos con este número. Espera un momento e inténtalo de nuevo.' }
+  }
 
   // Check ≤ 3 active future signups for this phone
   const [activeCount] = await sql<{ count: number }[]>`
