@@ -42,6 +42,22 @@ export type CentroConDatos = Center & {
   shifts: Shift[]
 }
 
+// ── tipos públicos (página /c/[slug]) ────────────────────────────────────────
+
+export type CentroPublico = Center & {
+  source:          string | null
+  data_source_url: string | null
+  recepcion_hasta: Date | null
+  verified_at:     Date | null
+  verified_by:     string | null
+}
+
+export type CentroConDatosPublico = CentroPublico & {
+  needs:     Need[]
+  shifts:    Shift[]
+  reclamado: boolean
+}
+
 // ── tipos home ──────────────────────────────────────────────────────────────
 
 export type CentroHome = {
@@ -121,7 +137,9 @@ export async function obtenerCiudades(): Promise<string[]> {
 
 export async function listarSlugsActivos(): Promise<{ slug: string }[]> {
   return sql<{ slug: string }[]>`
-    SELECT slug FROM centers WHERE is_active = true
+    SELECT slug FROM centers
+    WHERE is_active = true
+      AND (recepcion_hasta IS NULL OR recepcion_hasta >= current_date)
   `
 }
 
@@ -410,18 +428,24 @@ export async function obtenerCentrosParaLanding(): Promise<CentroParaLanding[]> 
       GROUP BY center_id
     ) avail ON avail.center_id = c.id
     WHERE c.is_active = true
+      AND (c.recepcion_hasta IS NULL OR c.recepcion_hasta >= current_date)
     ORDER BY COALESCE(ns.urgent_count, 0) DESC, c.name
   `
 }
 
 // ── queries existentes ───────────────────────────────────────────────────────
 
-export async function obtenerCentroPorSlug(slug: string): Promise<CentroConDatos | null> {
-  const centers = await sql<Center[]>`
-    SELECT id, slug, name, address, city, status,
-           coordinator_name, lat, lng, whatsapp_contact, schedule_note, is_active
-    FROM centers
-    WHERE slug = ${slug} AND is_active = true
+export async function obtenerCentroPorSlug(slug: string): Promise<CentroConDatosPublico | null> {
+  const centers = await sql<(CentroPublico & { reclamado: boolean })[]>`
+    SELECT c.id, c.slug, c.name, c.address, c.city, c.status,
+           c.coordinator_name, c.lat, c.lng, c.whatsapp_contact, c.schedule_note, c.is_active,
+           c.source, c.data_source_url, c.recepcion_hasta, c.verified_at, c.verified_by,
+           EXISTS(
+             SELECT 1 FROM coordinator_users cu
+             WHERE cu.center_id = c.id AND cu.password_hash IS NOT NULL
+           ) AS reclamado
+    FROM centers c
+    WHERE c.slug = ${slug} AND c.is_active = true
     LIMIT 1
   `
 

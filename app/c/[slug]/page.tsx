@@ -5,7 +5,7 @@ import { notFound, permanentRedirect } from 'next/navigation'
 import { obtenerCentroPorSlug, listarSlugsActivos, type Need } from '@/lib/queries'
 import { sql } from '@/lib/db'
 import { NIVELES, ROLES, type Nivel, type Rol } from '@/lib/constants'
-import { esHoy, esMañana, rangoHorario, haceCuanto, formatearFecha } from '@/lib/time'
+import { esHoy, esMañana, rangoHorario, haceCuanto, formatearFecha, formatearFechaSola } from '@/lib/time'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 
@@ -73,6 +73,14 @@ const STATUS_UI = {
 
 const NIVEL_ORDEN: Nivel[] = ['urgent', 'needed', 'do_not_bring', 'enough']
 
+const SOURCE_LABELS: Record<string, string> = {
+  oficial_distrital: 'la Alcaldía de Bogotá',
+  cruz_roja:        'la Cruz Roja Colombiana',
+  universidad:      'la institución educativa',
+  aliado:           'aliado verificado',
+  ciudadano:        'reporte ciudadano',
+}
+
 function capitalizar(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
@@ -134,6 +142,14 @@ export default async function CentroPage({ params }: Props) {
         <a href="/" className="text-sm text-secondary hover:underline">
           ← Todos los centros
         </a>
+
+        {/* Aviso de fecha límite de recepción */}
+        {centro.recepcion_hasta && (
+          <div className="mt-3 px-4 py-3 bg-warning-container border border-warning rounded text-sm text-on-warning-container font-medium">
+            Este punto recibe donaciones hasta el{' '}
+            {formatearFechaSola(new Date(centro.recepcion_hasta))}.
+          </div>
+        )}
 
         {/* ── 2 columnas en desktop, 1 en móvil ──────────────────── */}
         <div className="mt-4 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 items-start">
@@ -234,9 +250,22 @@ export default async function CentroPage({ params }: Props) {
               <h2 className="text-lg font-bold text-on-surface mb-3">Turnos de voluntariado</h2>
 
               {shifts.length === 0 ? (
-                <p className="text-on-surface-variant text-sm">
-                  No hay turnos disponibles en este momento. Vuelve a revisar pronto.
-                </p>
+                <div className="space-y-2">
+                  <p className="text-on-surface-variant text-sm">
+                    Este centro recibe donaciones pero todavía no coordina turnos de voluntariado por AcopioYA.
+                  </p>
+                  {!centro.reclamado && (
+                    <p className="text-on-surface-variant text-sm">
+                      ¿Coordinas este centro?{' '}
+                      <a
+                        href="mailto:gabrielpadillab03@gmail.com?subject=Coordino%20este%20centro"
+                        className="text-secondary underline"
+                      >
+                        Escríbenos y te damos acceso para publicar turnos.
+                      </a>
+                    </p>
+                  )}
+                </div>
               ) : (
                 <div className="space-y-3">
                   {shifts.map(s => {
@@ -293,6 +322,26 @@ export default async function CentroPage({ params }: Props) {
           </div>
 
         </div>
+        {/* Procedencia y verificación */}
+        {centro.verified_at && centro.source && (
+          <p className="mt-8 text-xs text-on-surface-variant border-t border-outline-variant pt-4">
+            Información tomada de{' '}
+            {centro.data_source_url ? (
+              <a
+                href={centro.data_source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                {SOURCE_LABELS[centro.source] ?? centro.source}
+              </a>
+            ) : (
+              <span>{SOURCE_LABELS[centro.source] ?? centro.source}</span>
+            )}{' '}
+            y verificada el {formatearFecha(new Date(centro.verified_at))}.
+          </p>
+        )}
+
       </main>
 
       <Footer />
