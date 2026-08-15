@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { obtenerTurnoConCentro } from '@/lib/queries'
 import { ROLES, type Rol } from '@/lib/constants'
 import { rangoHorario, esHoy, esMañana, formatearFecha } from '@/lib/time'
@@ -15,6 +15,9 @@ export default async function TurnoPage({ params }: Props) {
   const turno = await obtenerTurnoConCentro(id, slug)
 
   if (!turno) notFound()
+
+  // Los turnos en modo contacto no tienen inscripción en línea
+  if (turno.signup_mode === 'contacto') redirect(`/c/${slug}`)
 
   const ahora     = new Date()
   const terminado = new Date(turno.ends_at) <= ahora

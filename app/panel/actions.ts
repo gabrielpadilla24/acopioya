@@ -95,6 +95,7 @@ export async function crearTurno(
   const capacidad   = parseInt(formData.get('capacidad')    as string, 10)
   const overbookPct = parseInt(formData.get('overbook_pct') as string || '0', 10)
   const waGroupUrl  = (formData.get('wa_group_url')  as string ?? '').trim() || null
+  const signupMode  = formData.get('signup_mode') === 'contacto' ? 'contacto' : 'self'
 
   if (!rol || !fecha || !horaInicio || !horaFin || isNaN(capacidad) || capacidad < 1) {
     return { error: 'Completa los campos obligatorios (rol, fecha, horario, cupos).' }
@@ -117,9 +118,9 @@ export async function crearTurno(
 
   await sql`
     INSERT INTO shifts
-      (center_id, role, role_detail, starts_at, ends_at, capacity, overbook_pct, whatsapp_group_url, taken)
+      (center_id, role, role_detail, starts_at, ends_at, capacity, overbook_pct, whatsapp_group_url, signup_mode, taken)
     VALUES
-      (${centro.id}, ${rol}, ${roleDetail}, ${startsAt}, ${endsAt}, ${capacidad}, ${overbookPct}, ${waGroupUrl}, 0)
+      (${centro.id}, ${rol}, ${roleDetail}, ${startsAt}, ${endsAt}, ${capacidad}, ${overbookPct}, ${waGroupUrl}, ${signupMode}, 0)
   `
   revalidatePath('/c/' + centro.slug)
   revalidatePath('/')
@@ -137,8 +138,9 @@ export async function duplicarTurno(
     role: string; role_detail: string | null
     starts_at: Date; ends_at: Date
     capacity: number; overbook_pct: number; whatsapp_group_url: string | null
+    signup_mode: string
   }[]>`
-    SELECT role, role_detail, starts_at, ends_at, capacity, overbook_pct, whatsapp_group_url
+    SELECT role, role_detail, starts_at, ends_at, capacity, overbook_pct, whatsapp_group_url, signup_mode
     FROM shifts WHERE id = ${shiftId} AND center_id = ${centro.id} LIMIT 1
   `
   if (rows.length === 0) redirect('/panel')
@@ -149,10 +151,10 @@ export async function duplicarTurno(
 
   await sql`
     INSERT INTO shifts
-      (center_id, role, role_detail, starts_at, ends_at, capacity, overbook_pct, whatsapp_group_url, taken)
+      (center_id, role, role_detail, starts_at, ends_at, capacity, overbook_pct, whatsapp_group_url, signup_mode, taken)
     VALUES
       (${centro.id}, ${s.role}, ${s.role_detail}, ${newStartsAt}, ${newEndsAt},
-       ${s.capacity}, ${s.overbook_pct}, ${s.whatsapp_group_url}, 0)
+       ${s.capacity}, ${s.overbook_pct}, ${s.whatsapp_group_url}, ${s.signup_mode}, 0)
   `
   revalidatePath('/c/' + centro.slug)
   revalidatePath('/')

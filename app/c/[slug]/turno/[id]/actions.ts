@@ -49,6 +49,14 @@ export async function inscribir(
     return { error: 'Demasiados intentos con este número. Espera un momento e inténtalo de nuevo.' }
   }
 
+  // Validación servidor: rechazar turnos en modo contacto (la UI tampoco los muestra)
+  const [modeRow] = await sql<{ signup_mode: string }[]>`
+    SELECT signup_mode FROM shifts WHERE id = ${shiftId} LIMIT 1
+  `
+  if (!modeRow || modeRow.signup_mode !== 'self') {
+    return { error: 'Este turno no acepta inscripciones en línea. Contáctate directamente con el centro.' }
+  }
+
   // Check ≤ 3 active future signups for this phone
   const [activeCount] = await sql<{ count: number }[]>`
     SELECT COUNT(*)::int AS count

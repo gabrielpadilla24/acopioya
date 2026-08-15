@@ -269,9 +269,55 @@ export default async function CentroPage({ params }: Props) {
               ) : (
                 <div className="space-y-3">
                   {shifts.map(s => {
-                    const lleno    = s.taken >= s.capacity
-                    const pct      = Math.min(100, Math.round((s.taken / s.capacity) * 100))
                     const rolLabel = ROLES[s.role as Rol] ?? s.role
+
+                    if (s.signup_mode === 'contacto') {
+                      const waNum  = centro.whatsapp_contact?.replace(/[^\d]/g, '')
+                      const waText = encodeURIComponent(
+                        `Hola, vi en AcopioYA que buscan voluntarios para ${rolLabel} el ${etiquetaTurno(s.starts_at, s.ends_at)}. Me gustaría ayudar.`
+                      )
+                      return (
+                        <div key={s.id} className="border border-outline-variant rounded p-4">
+                          <p className="font-bold text-on-surface">
+                            {rolLabel}
+                            {s.role_detail && (
+                              <span className="font-normal text-on-surface-variant"> — {s.role_detail}</span>
+                            )}
+                          </p>
+                          <p className="text-on-surface text-sm mt-1">
+                            {etiquetaTurno(s.starts_at, s.ends_at)}
+                          </p>
+                          <p className="text-sm font-semibold text-secondary mt-3">
+                            Se buscan {s.capacity} voluntarios
+                          </p>
+                          <div className="mt-3">
+                            {waNum ? (
+                              <>
+                                <a
+                                  href={`https://wa.me/${waNum}?text=${waText}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-center min-h-[44px] px-4
+                                             bg-tertiary text-on-tertiary font-bold rounded text-center"
+                                >
+                                  Escribir por WhatsApp →
+                                </a>
+                                <p className="text-xs text-on-surface-variant mt-2">
+                                  Este turno lo coordina directamente el centro. Escríbeles y cuéntales que quieres ayudar.
+                                </p>
+                              </>
+                            ) : (
+                              <p className="text-sm text-on-surface-variant">
+                                Comunícate directamente con el centro para participar en este turno.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    const lleno = s.taken >= s.capacity
+                    const pct   = Math.min(100, Math.round((s.taken / s.capacity) * 100))
 
                     return (
                       <div key={s.id} className="border border-outline-variant rounded p-4">

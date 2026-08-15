@@ -35,6 +35,7 @@ export type Shift = {
   capacity: number
   overbook_pct: number
   taken: number
+  signup_mode: string
 }
 
 export type CentroConDatos = Center & {
@@ -210,7 +211,7 @@ export async function obtenerTurnoConCentro(shiftId: string, slug: string): Prom
   const rows = await sql<TurnoConCentro[]>`
     SELECT
       s.id, s.center_id, s.role, s.role_detail, s.starts_at, s.ends_at,
-      s.capacity, s.overbook_pct, s.taken,
+      s.capacity, s.overbook_pct, s.taken, s.signup_mode,
       c.name AS center_name, c.slug AS center_slug, c.status AS center_status
     FROM shifts s
     JOIN centers c ON c.id = s.center_id
@@ -262,6 +263,7 @@ export type TurnoParaPanel = {
   taken:              number
   status:             'open' | 'closed'
   whatsapp_group_url: string | null
+  signup_mode:        string
   center_name:        string
   center_slug:        string
   center_status:      'open' | 'full' | 'closed'
@@ -299,7 +301,7 @@ export async function obtenerCentroPorId(centerId: string): Promise<CentroPanelD
         sh.id, sh.center_id, sh.role, sh.role_detail,
         sh.starts_at, sh.ends_at,
         sh.capacity, sh.overbook_pct, sh.taken,
-        sh.whatsapp_group_url, sh.status,
+        sh.whatsapp_group_url, sh.status, sh.signup_mode,
         COALESCE(sg.confirmados, 0)::int AS confirmados,
         COALESCE(sg.inscritos,   0)::int AS inscritos,
         COALESCE(sg.liberados,   0)::int AS liberados,
@@ -331,7 +333,7 @@ export async function obtenerTurnoPorIdYCentro(
     SELECT
       sh.id, sh.center_id, sh.role, sh.role_detail,
       sh.starts_at, sh.ends_at, sh.capacity, sh.overbook_pct, sh.taken,
-      sh.status, sh.whatsapp_group_url,
+      sh.status, sh.whatsapp_group_url, sh.signup_mode,
       c.name   AS center_name,
       c.slug   AS center_slug,
       c.status AS center_status
@@ -474,7 +476,7 @@ export async function obtenerCentroPorSlug(slug: string): Promise<CentroConDatos
     `,
     sql<Shift[]>`
       SELECT id, center_id, role, role_detail, starts_at, ends_at,
-             capacity, overbook_pct, taken
+             capacity, overbook_pct, taken, signup_mode
       FROM shifts
       WHERE center_id = ${center.id}
         AND status = 'open'

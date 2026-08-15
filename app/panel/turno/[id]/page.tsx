@@ -176,20 +176,31 @@ export default async function TurnoPanelPage({ params }: Props) {
           })}
         </section>
 
+        {/* ── NOTA MODO CONTACTO ──────────────────────────────────────── */}
+        {turno.signup_mode === 'contacto' && (
+          <section className="border border-secondary-container bg-secondary-container rounded p-4">
+            <p className="text-sm text-on-secondary-container font-medium">
+              Este turno lo coordinas por WhatsApp. Las personas que lleguen las registras acá como walk-in.
+            </p>
+          </section>
+        )}
+
         {/* ── AGREGAR WALK-IN ─────────────────────────────────────────── */}
         <section className="border border-outline-variant rounded p-4 bg-surface-container-lowest">
           <h2 className="text-base font-bold text-on-surface mb-3">Agregar walk-in</h2>
           <FormWalkIn shiftId={id} />
         </section>
 
-        {/* ── LIBERACIÓN MANUAL ───────────────────────────────────────── */}
-        <section className="border border-outline-variant rounded p-4 bg-surface-container-lowest">
-          <h2 className="text-base font-bold text-on-surface mb-1">Liberación manual</h2>
-          <p className="text-xs text-on-surface-variant mb-3">
-            Libera los cupos de quienes no llegaron, para que otras personas puedan tomarlos.
-          </p>
-          <LiberarAhora shiftId={id} />
-        </section>
+        {/* ── LIBERACIÓN MANUAL (solo turnos self) ────────────────────── */}
+        {turno.signup_mode !== 'contacto' && (
+          <section className="border border-outline-variant rounded p-4 bg-surface-container-lowest">
+            <h2 className="text-base font-bold text-on-surface mb-1">Liberación manual</h2>
+            <p className="text-xs text-on-surface-variant mb-3">
+              Libera los cupos de quienes no llegaron, para que otras personas puedan tomarlos.
+            </p>
+            <LiberarAhora shiftId={id} />
+          </section>
+        )}
 
       </main>
     </>

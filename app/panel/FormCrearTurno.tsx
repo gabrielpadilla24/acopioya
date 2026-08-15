@@ -7,6 +7,7 @@ import { ROLES, type Rol }          from '@/lib/constants'
 export function FormCrearTurno({ todayBogota }: { todayBogota: string }) {
   const [state, formAction, pending] = useActionState(crearTurno, null)
   const [showDetail, setShowDetail]  = useState(false)
+  const [signupMode, setSignupMode]  = useState<'self' | 'contacto'>('self')
 
   return (
     <form action={formAction} className="space-y-3">
@@ -75,9 +76,39 @@ export function FormCrearTurno({ todayBogota }: { todayBogota: string }) {
         </div>
       </div>
 
+      <div>
+        <label className="block text-xs font-medium text-on-surface-variant mb-2">Modo de inscripción *</label>
+        <div className="space-y-2">
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="signup_mode"
+              value="self"
+              checked={signupMode === 'self'}
+              onChange={() => setSignupMode('self')}
+              className="mt-0.5"
+            />
+            <span className="text-sm text-on-surface">Los voluntarios se inscriben solos desde la página</span>
+          </label>
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="signup_mode"
+              value="contacto"
+              checked={signupMode === 'contacto'}
+              onChange={() => setSignupMode('contacto')}
+              className="mt-0.5"
+            />
+            <span className="text-sm text-on-surface">Yo coordino a los voluntarios por WhatsApp</span>
+          </label>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-xs font-medium text-on-surface-variant mb-1">Cupos *</label>
+          <label className="block text-xs font-medium text-on-surface-variant mb-1">
+            {signupMode === 'contacto' ? '¿Cuántos voluntarios necesitas? *' : 'Cupos *'}
+          </label>
           <input
             name="capacidad"
             type="number"
