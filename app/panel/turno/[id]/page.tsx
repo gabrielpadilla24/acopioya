@@ -41,7 +41,9 @@ export default async function TurnoPanelPage({ params }: Props) {
   const inicio   = new Date(turno.starts_at)
   const fin      = new Date(turno.ends_at)
   const rolLabel = (ROLES as Record<string, string>)[turno.role] ?? turno.role
-  const maxCupos = turno.capacity + Math.floor(turno.capacity * turno.overbook_pct / 100)
+  const maxCupos = turno.capacity !== null
+    ? turno.capacity + Math.floor(turno.capacity * turno.overbook_pct / 100)
+    : null
 
   let diaLabel: string
   if (esHoy(inicio))         diaLabel = 'hoy'
@@ -86,11 +88,11 @@ export default async function TurnoPanelPage({ params }: Props) {
             {diaLabel}, {rangoHorario(inicio, fin)}
           </p>
           <p className="text-on-surface-variant text-sm mt-1 tabular-nums">
-            {turno.taken}/{maxCupos} reservados · {confirmados} confirmados
+            {turno.taken}{maxCupos !== null ? `/${maxCupos}` : ''} reservados · {confirmados} confirmados
             {liberados  > 0 && <span> · {liberados} liberados</span>}
             {asistieron > 0 && <span> · {asistieron} asistieron</span>}
           </p>
-          {turno.taken > turno.capacity && (
+          {turno.capacity !== null && turno.taken > turno.capacity && (
             <p className="mt-2 text-sm text-on-warning-container bg-warning-container border border-warning rounded px-3 py-2">
               Este turno está por encima de su capacidad ({turno.taken} de {turno.capacity}).
             </p>

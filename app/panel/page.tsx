@@ -34,7 +34,9 @@ function ShiftCard({ shift, past }: { shift: ShiftConConteos; past?: boolean }) 
   const inicio   = new Date(shift.starts_at)
   const fin      = new Date(shift.ends_at)
   const activos  = shift.inscritos + shift.confirmados
-  const maxCupos = shift.capacity + Math.floor(shift.capacity * shift.overbook_pct / 100)
+  const maxCupos = shift.capacity !== null
+    ? shift.capacity + Math.floor(shift.capacity * shift.overbook_pct / 100)
+    : null
   const rolLabel = (ROLES as Record<string, string>)[shift.role] ?? shift.role
 
   return (
@@ -55,7 +57,7 @@ function ShiftCard({ shift, past }: { shift: ShiftConConteos; past?: boolean }) 
             {etiquetaDia(inicio)}, {rangoHorario(inicio, fin)}
           </p>
           <p className="text-on-surface-variant text-xs mt-1 tabular-nums">
-            {activos}/{maxCupos} cupos · {shift.confirmados} conf
+            {activos}{maxCupos !== null ? `/${maxCupos}` : ''} cupos · {shift.confirmados} conf
             {shift.liberados  > 0 && <span> · {shift.liberados} lib</span>}
             {shift.asistieron > 0 && <span> · {shift.asistieron} asist.</span>}
           </p>

@@ -23,7 +23,9 @@ export default async function TurnoPage({ params }: Props) {
   const terminado = new Date(turno.ends_at) <= ahora
   const cerrado   = turno.center_status === 'closed'
 
-  const maxCupos = turno.capacity + Math.floor(turno.capacity * turno.overbook_pct / 100)
+  // capacity no puede ser null aquí: el redirect de arriba cubre los turnos contacto
+  const cap      = turno.capacity!
+  const maxCupos = cap + Math.floor(cap * turno.overbook_pct / 100)
   const lleno    = turno.taken >= maxCupos
 
   const rolLabel = ROLES[turno.role as Rol] ?? turno.role
@@ -36,7 +38,7 @@ export default async function TurnoPage({ params }: Props) {
   else if (esMañana(inicio)) etiqueta = `Mañana, ${rango}`
   else                       etiqueta = `${formatearFecha(inicio)}, ${rango}`
 
-  const pct = Math.min(100, Math.round((turno.taken / turno.capacity) * 100))
+  const pct = Math.min(100, Math.round((turno.taken / cap) * 100))
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -60,7 +62,7 @@ export default async function TurnoPage({ params }: Props) {
             />
           </div>
           <p className="text-sm text-on-surface-variant mt-1">
-            {turno.taken} de {turno.capacity} cupos ocupados
+            {turno.taken} de {cap} cupos ocupados
           </p>
         </div>
 

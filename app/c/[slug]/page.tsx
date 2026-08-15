@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     .filter(n => n.level === 'urgent')
     .map(n => n.category)
 
-  const turnosConCupo = centro.shifts.filter(s => s.taken < s.capacity).length
+  const turnosConCupo = centro.shifts.filter(s => s.capacity !== null && s.taken < s.capacity).length
 
   let description: string
   if (urgentes.length > 0) {
@@ -288,7 +288,9 @@ export default async function CentroPage({ params }: Props) {
                             {etiquetaTurno(s.starts_at, s.ends_at)}
                           </p>
                           <p className="text-sm font-semibold text-secondary mt-3">
-                            Se buscan {s.capacity} voluntarios
+                            {s.capacity !== null
+                              ? `Se buscan ${s.capacity} voluntarios`
+                              : 'Se necesitan voluntarios'}
                           </p>
                           <div className="mt-3">
                             {waNum ? (
@@ -316,8 +318,10 @@ export default async function CentroPage({ params }: Props) {
                       )
                     }
 
-                    const lleno = s.taken >= s.capacity
-                    const pct   = Math.min(100, Math.round((s.taken / s.capacity) * 100))
+                    // capacity nunca es null en modo self (CHECK shifts_capacity_self_check)
+                    const cap   = s.capacity!
+                    const lleno = s.taken >= cap
+                    const pct   = Math.min(100, Math.round((s.taken / cap) * 100))
 
                     return (
                       <div key={s.id} className="border border-outline-variant rounded p-4">
@@ -340,7 +344,7 @@ export default async function CentroPage({ params }: Props) {
                             />
                           </div>
                           <p className="text-sm text-on-surface-variant mt-1">
-                            {Math.min(s.taken, s.capacity)} de {s.capacity} cupos ocupados
+                            {Math.min(s.taken, cap)} de {cap} cupos ocupados
                           </p>
                         </div>
 

@@ -32,7 +32,7 @@ export type Shift = {
   role_detail: string | null
   starts_at: Date
   ends_at: Date
-  capacity: number
+  capacity: number | null
   overbook_pct: number
   taken: number
   signup_mode: string
@@ -258,7 +258,7 @@ export type TurnoParaPanel = {
   role_detail:        string | null
   starts_at:          Date
   ends_at:            Date
-  capacity:           number
+  capacity:           number | null
   overbook_pct:       number
   taken:              number
   status:             'open' | 'closed'

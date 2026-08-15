@@ -107,16 +107,21 @@ export function FormCrearTurno({ todayBogota }: { todayBogota: string }) {
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="block text-xs font-medium text-on-surface-variant mb-1">
-            {signupMode === 'contacto' ? '¿Cuántos voluntarios necesitas? *' : 'Cupos *'}
+            {signupMode === 'contacto' ? '¿Cuántos voluntarios necesitas? (opcional)' : 'Cupos *'}
           </label>
           <input
             name="capacidad"
             type="number"
             min={1}
-            required
-            placeholder="20"
+            required={signupMode === 'self'}
+            placeholder={signupMode === 'contacto' ? '' : '20'}
             className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary"
           />
+          {signupMode === 'contacto' && (
+            <p className="text-xs text-on-surface-variant mt-1">
+              Déjalo vacío si prefieres no fijar un número.
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-xs font-medium text-on-surface-variant mb-1">Tolerancia % (sobreocupación)</label>

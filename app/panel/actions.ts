@@ -92,13 +92,20 @@ export async function crearTurno(
   const fecha       = (formData.get('fecha')         as string ?? '').trim()
   const horaInicio  = (formData.get('hora_inicio')   as string ?? '').trim()
   const horaFin     = (formData.get('hora_fin')      as string ?? '').trim()
-  const capacidad   = parseInt(formData.get('capacidad')    as string, 10)
-  const overbookPct = parseInt(formData.get('overbook_pct') as string || '0', 10)
-  const waGroupUrl  = (formData.get('wa_group_url')  as string ?? '').trim() || null
-  const signupMode  = formData.get('signup_mode') === 'contacto' ? 'contacto' : 'self'
+  const capacidadRaw = (formData.get('capacidad') as string ?? '').trim()
+  const capacidad    = capacidadRaw ? parseInt(capacidadRaw, 10) : null
+  const overbookPct  = parseInt(formData.get('overbook_pct') as string || '0', 10)
+  const waGroupUrl   = (formData.get('wa_group_url')  as string ?? '').trim() || null
+  const signupMode   = formData.get('signup_mode') === 'contacto' ? 'contacto' : 'self'
 
-  if (!rol || !fecha || !horaInicio || !horaFin || isNaN(capacidad) || capacidad < 1) {
+  if (!rol || !fecha || !horaInicio || !horaFin) {
+    return { error: 'Completa los campos obligatorios (rol, fecha, horario).' }
+  }
+  if (signupMode === 'self' && (capacidad === null || isNaN(capacidad) || capacidad < 1)) {
     return { error: 'Completa los campos obligatorios (rol, fecha, horario, cupos).' }
+  }
+  if (capacidad !== null && (isNaN(capacidad) || capacidad < 1)) {
+    return { error: 'Los cupos deben ser al menos 1.' }
   }
   if (overbookPct < 0 || overbookPct > 100) {
     return { error: 'La tolerancia debe estar entre 0 y 100.' }
