@@ -6,6 +6,8 @@ import { rangoHorario, esHoy, esMañana, formatearFecha }     from '@/lib/time'
 import {
   salir,
   cambiarEstadoCentro,
+  guardarAviso,
+  quitarAviso,
   cambiarNivelNecesidad,
   agregarNecesidad,
   eliminarNecesidad,
@@ -16,6 +18,7 @@ import {
 import { ConfirmButton }    from './ConfirmButton'
 import { FormCrearTurno }   from './FormCrearTurno'
 import { EstadoControl }    from './EstadoControl'
+import { FormAviso }        from './FormAviso'
 import { NecesidadesList }  from './NecesidadesList'
 
 export const dynamic = 'force-dynamic'
@@ -220,6 +223,19 @@ export default async function PanelPage({ searchParams }: Props) {
                   </p>
                 </div>
               </div>
+            </section>
+
+            {/* Aviso temporal */}
+            <section className="bg-surface-container-lowest border border-outline-variant rounded p-4">
+              <h2 className="text-base font-bold text-on-surface mb-1">Aviso</h2>
+              <p className="text-xs text-on-surface-variant mb-3">
+                Aparece en la ficha pública durante 72 horas. Máximo 140 caracteres.
+              </p>
+              <FormAviso
+                currentNotice={centro.notice ?? null}
+                guardar={guardarAviso}
+                quitar={quitarAviso}
+              />
             </section>
 
             {/* Necesidades */}

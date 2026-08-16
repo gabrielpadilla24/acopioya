@@ -163,6 +163,16 @@ export default async function CentroPage({ params }: Props) {
               {statusUI.badge}
             </span>
 
+            {centro.notice && centro.notice_updated_at &&
+              new Date(centro.notice_updated_at).getTime() > Date.now() - 72 * 60 * 60 * 1000 && (
+              <div className="mt-3 border-l-[3px] border-l-secondary bg-secondary/8 pl-4 py-3">
+                <p className="text-secondary text-xs font-medium">
+                  🚛 Aviso · {haceCuanto(new Date(centro.notice_updated_at))}
+                </p>
+                <p className="text-on-surface mt-1 text-[15px]">{centro.notice}</p>
+              </div>
+            )}
+
             {centro.schedule_note && (
               <p className="mt-1.5 text-on-surface-variant text-sm">{centro.schedule_note}</p>
             )}

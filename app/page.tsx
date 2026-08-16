@@ -65,6 +65,11 @@ function TarjetaCentro({ c }: { c: CentroParaLanding }) {
         </div>
       )}
 
+      {/* Pill de aviso activo */}
+      {c.notice_active && (
+        <p className="mt-2 text-xs text-secondary font-medium">🚛 Aviso activo</p>
+      )}
+
       {/* Pie anclado abajo */}
       <div className="mt-auto pt-3 flex items-center justify-between gap-2">
         {c.reclamado && c.last_need_update ? (

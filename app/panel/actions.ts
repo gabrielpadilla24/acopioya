@@ -32,7 +32,30 @@ export async function cambiarEstadoCentro(
   redirect('/panel')
 }
 
-// ── 2. Cambiar nivel de necesidad ────────────────────────────────────────────
+// ── 2. Guardar / quitar aviso ────────────────────────────────────────────────
+
+export async function guardarAviso(formData: FormData): Promise<void> {
+  const centro = await getCentroDeSession()
+  const notice = (formData.get('notice') as string ?? '').trim() || null
+  if (notice !== null) {
+    await sql`UPDATE centers SET notice = ${notice}, notice_updated_at = now(), updated_at = now() WHERE id = ${centro.id}`
+  } else {
+    await sql`UPDATE centers SET notice = NULL, notice_updated_at = NULL, updated_at = now() WHERE id = ${centro.id}`
+  }
+  revalidatePath('/c/' + centro.slug)
+  revalidatePath('/')
+  redirect('/panel')
+}
+
+export async function quitarAviso(_formData: FormData): Promise<void> {
+  const centro = await getCentroDeSession()
+  await sql`UPDATE centers SET notice = NULL, notice_updated_at = NULL, updated_at = now() WHERE id = ${centro.id}`
+  revalidatePath('/c/' + centro.slug)
+  revalidatePath('/')
+  redirect('/panel')
+}
+
+// ── 3. Cambiar nivel de necesidad ────────────────────────────────────────────
 
 export async function cambiarNivelNecesidad(
   needId: string,

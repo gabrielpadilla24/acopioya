@@ -14,6 +14,8 @@ export type Center = {
   whatsapp_contact: string | null
   phone: string | null
   schedule_note: string | null
+  notice: string | null
+  notice_updated_at: Date | null
   is_active: boolean
 }
 
@@ -276,7 +278,8 @@ export type TurnoParaPanel = {
 export async function obtenerCentroPorId(centerId: string): Promise<CentroPanelDetalle | null> {
   const centers = await sql<Center[]>`
     SELECT id, slug, name, address, city, status,
-           coordinator_name, lat, lng, whatsapp_contact, phone, schedule_note, is_active
+           coordinator_name, lat, lng, whatsapp_contact, phone,
+           schedule_note, notice, notice_updated_at, is_active
     FROM centers
     WHERE id = ${centerId}
     LIMIT 1
@@ -389,6 +392,7 @@ export type CentroParaLanding = {
   last_need_update: Date | null
   verified_at:      Date | null
   reclamado:        boolean
+  notice_active:    boolean
   needs:            NecesidadPublica[]
 }
 
@@ -402,7 +406,7 @@ export async function obtenerCentrosParaLanding(): Promise<CentroParaLanding[]> 
     SELECT
       c.id, c.slug, c.name, c.city, c.address, c.status,
       c.lat, c.lng, c.whatsapp_contact, c.coordinator_name, c.schedule_note,
-      COALESCE(ns.urgent_count, 0)::int      AS urgent_count,
+      COALESCE(ns.urgent_count, 0)::int        AS urgent_count,
       COALESCE(avail.available_shifts, 0)::int AS available_shifts,
       ns.last_need_update,
       c.verified_at,
@@ -410,7 +414,8 @@ export async function obtenerCentrosParaLanding(): Promise<CentroParaLanding[]> 
         SELECT 1 FROM coordinator_users cu
         WHERE cu.center_id = c.id AND cu.password_hash IS NOT NULL
       ) AS reclamado,
-      COALESCE(ns.needs_agg, '[]'::json)     AS needs
+      (c.notice IS NOT NULL AND c.notice_updated_at > now() - interval '72 hours') AS notice_active,
+      COALESCE(ns.needs_agg, '[]'::json)       AS needs
     FROM centers c
     LEFT JOIN (
       SELECT
@@ -448,7 +453,8 @@ export async function obtenerCentrosParaLanding(): Promise<CentroParaLanding[]> 
 export async function obtenerCentroPorSlug(slug: string): Promise<CentroConDatosPublico | null> {
   const centers = await sql<(CentroPublico & { reclamado: boolean })[]>`
     SELECT c.id, c.slug, c.name, c.address, c.city, c.status,
-           c.coordinator_name, c.lat, c.lng, c.whatsapp_contact, c.phone, c.schedule_note, c.is_active,
+           c.coordinator_name, c.lat, c.lng, c.whatsapp_contact, c.phone,
+           c.schedule_note, c.notice, c.notice_updated_at, c.is_active,
            c.source, c.data_source_url, c.recepcion_hasta, c.verified_at, c.verified_by,
            EXISTS(
              SELECT 1 FROM coordinator_users cu
