@@ -79,7 +79,9 @@ export function NecesidadesList({
       updateNeeds({ type: 'level', id: needId, nivel })
       try {
         await cambiarNivel(needId, nivel, new FormData())
-      } catch {
+      } catch (e) {
+        if ((e as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) throw e
+        console.error(e)
         setError('No se pudo guardar. Intenta de nuevo.')
       }
     })
@@ -93,7 +95,9 @@ export function NecesidadesList({
       updateNeeds({ type: 'remove', id: need.id })
       try {
         await eliminar(need.id)
-      } catch {
+      } catch (e) {
+        if ((e as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) throw e
+        console.error(e)
         setError('No se pudo eliminar. Intenta de nuevo.')
       }
     })

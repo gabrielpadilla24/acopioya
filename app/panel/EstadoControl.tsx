@@ -40,7 +40,9 @@ export function EstadoControl({
       addOptimisticStatus(estado)
       try {
         await cambiar(estado, new FormData())
-      } catch {
+      } catch (e) {
+        if ((e as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) throw e
+        console.error(e)
         setError('No se pudo guardar. Intenta de nuevo.')
       }
     })
