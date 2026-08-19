@@ -118,7 +118,7 @@ export default async function HomePage() {
           role="status"
           className="bg-primary text-on-primary text-center py-2 px-4 text-sm font-medium"
         >
-          Emergencia activa · Lleva lo que se necesita urgente
+          Recolección pausada · La Alcaldía y la Cruz Roja suspendieron temporalmente la recepción de donaciones
         </div>
         <Header />
       </div>
@@ -126,7 +126,7 @@ export default async function HomePage() {
       <main className="flex-1">
 
         {/* ── HERO ─────────────────────────────────────────────────── */}
-        <section className="max-w-screen-xl mx-auto px-4 lg:px-8 pt-10 pb-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <section className={`max-w-screen-xl mx-auto px-4 lg:px-8 pt-10 pb-8 ${centrosMapa.length > 0 ? 'grid grid-cols-1 lg:grid-cols-2 gap-8 items-start' : ''}`}>
 
           {/* Left: copy + CTAs */}
           <div>
@@ -152,28 +152,56 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Right: map
-              isolate: crea un stacking context propio para que las capas de
-              Leaflet (z-index hasta 1000) no escapen al root y tapen el header.
-              overflow-hidden: recorta los tiles en las esquinas redondeadas.
-          */}
-          <div className="isolate w-full h-[300px] lg:h-[450px] rounded overflow-hidden border border-outline-variant">
-            <MapaWrapper centros={centrosMapa} />
-          </div>
+          {/* Right: mapa — solo si hay marcadores */}
+          {centrosMapa.length > 0 && (
+            <div className="isolate w-full h-[300px] lg:h-[450px] rounded overflow-hidden border border-outline-variant">
+              <MapaWrapper centros={centrosMapa} />
+            </div>
+          )}
         </section>
 
         {/* ── CENTROS ──────────────────────────────────────────────── */}
         <section id="centros" className="max-w-screen-xl mx-auto px-4 lg:px-8 py-8 scroll-mt-32">
-          <h2 className="text-2xl font-bold text-on-surface mb-6">Centros de acopio</h2>
-
           {centros.length === 0 ? (
-            <p className="text-on-surface-variant">No hay centros activos en este momento.</p>
-          ) : (
-            <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              {centros.map(c => (
-                <TarjetaCentro key={c.id} c={c} />
-              ))}
+            /* ── Bloque "Gracias, Bogotá." ──────────────────────────── */
+            <div className="max-w-prose mx-auto py-6">
+              <h2 className="text-3xl font-bold text-on-surface">Gracias, Bogotá.</h2>
+              <div className="mt-6 space-y-4 text-on-surface-variant text-base">
+                <p>
+                  Se recogieron más de 1.800 toneladas de ayuda humanitaria para las familias
+                  afectadas por el terremoto. La respuesta superó lo que los centros podían procesar.
+                </p>
+                <p>
+                  Por eso la Alcaldía y la Cruz Roja suspendieron temporalmente la recepción de
+                  donaciones, y hemos retirado los puntos de acopio de la plataforma hasta nuevo aviso.
+                </p>
+                <p>
+                  Si coordinas un centro que sigue recibiendo,{' '}
+                  <a
+                    href="mailto:gabrielpadillab03@gmail.com?subject=Centro%20activo%20en%20AcopioYA"
+                    className="text-secondary underline"
+                  >
+                    escríbenos
+                  </a>
+                  {' '}y lo publicamos.
+                </p>
+              </div>
             </div>
+          ) : (
+            /* ── Lista con aviso de suspensión parcial ───────────────── */
+            <>
+              <div className="mb-6 px-4 py-3 bg-warning-container border border-warning rounded">
+                <p className="text-sm font-semibold text-on-warning-container">
+                  La mayoría de puntos suspendieron la recepción. Estos siguen recibiendo:
+                </p>
+              </div>
+              <h2 className="sr-only">Centros de acopio</h2>
+              <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {centros.map(c => (
+                  <TarjetaCentro key={c.id} c={c} />
+                ))}
+              </div>
+            </>
           )}
         </section>
 

@@ -52,7 +52,25 @@ export default async function DonarPage() {
         </div>
 
         {conContenido.length === 0 ? (
-          <p className="text-on-surface-variant">No hay centros activos con información de necesidades.</p>
+          <div className="max-w-prose py-6 space-y-4 text-on-surface-variant">
+            <h2 className="text-2xl font-bold text-on-surface">Recolección suspendida temporalmente</h2>
+            <p>
+              La Alcaldía de Bogotá y la Cruz Roja suspendieron la recepción de donaciones. Se
+              recogieron más de 1.800 toneladas de ayuda humanitaria, más de lo que los centros
+              podían procesar.
+            </p>
+            <p>
+              Cuando se reactiven los puntos de acopio, esta página volverá a mostrar qué llevar
+              y dónde. Si coordinas un centro que sigue recibiendo,{' '}
+              <a
+                href="mailto:gabrielpadillab03@gmail.com?subject=Centro%20activo%20en%20AcopioYA"
+                className="text-secondary underline"
+              >
+                escríbenos
+              </a>
+              {' '}y lo publicamos.
+            </p>
+          </div>
         ) : (
           <div className="space-y-6">
             {conContenido.map(c => {
