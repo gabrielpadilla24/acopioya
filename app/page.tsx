@@ -5,6 +5,7 @@ import { haceCuanto, formatearDiaMes } from '@/lib/time'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import MapaWrapper from './components/MapaWrapper'
+import { ModalAviso } from './components/ModalAviso'
 import type { CentroMapa } from './components/Mapa'
 
 const STATUS_BADGE: Record<string, string> = {
@@ -107,6 +108,8 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
 
+      <ModalAviso />
+
       {/* ── HEADER: banner + nav ─────────────────────────────────── */}
       {/*
         z-[1100]: Leaflet asigna z-index hasta 1000 (.leaflet-top/.leaflet-control).
@@ -134,7 +137,7 @@ export default async function HomePage() {
               Ayuda donde<br />más se necesita
             </h1>
             <p className="mt-4 text-on-surface-variant text-lg leading-relaxed max-w-md">
-              Centros de acopio activos en Bogotá. Ve qué llevar, inscríbete en un turno y llega cuando te necesitan.
+              La mayoría de puntos suspendieron la recepción. Estos centros siguen recibiendo donaciones.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a
@@ -162,33 +165,7 @@ export default async function HomePage() {
 
         {/* ── CENTROS ──────────────────────────────────────────────── */}
         <section id="centros" className="max-w-screen-xl mx-auto px-4 lg:px-8 py-8 scroll-mt-32">
-          {centros.length === 0 ? (
-            /* ── Bloque "Gracias, Bogotá." ──────────────────────────── */
-            <div className="max-w-prose mx-auto py-6">
-              <h2 className="text-3xl font-bold text-on-surface">Gracias, Bogotá.</h2>
-              <div className="mt-6 space-y-4 text-on-surface-variant text-base">
-                <p>
-                  Se recogieron más de 1.800 toneladas de ayuda humanitaria para las familias
-                  afectadas por el terremoto. La respuesta superó lo que los centros podían procesar.
-                </p>
-                <p>
-                  Por eso la Alcaldía y la Cruz Roja suspendieron temporalmente la recepción de
-                  donaciones, y hemos retirado los puntos de acopio de la plataforma hasta nuevo aviso.
-                </p>
-                <p>
-                  Si coordinas un centro que sigue recibiendo,{' '}
-                  <a
-                    href="mailto:gabrielpadillab03@gmail.com?subject=Centro%20activo%20en%20AcopioYA"
-                    className="text-secondary underline"
-                  >
-                    escríbenos
-                  </a>
-                  {' '}y lo publicamos.
-                </p>
-              </div>
-            </div>
-          ) : (
-            /* ── Lista con aviso de suspensión parcial ───────────────── */
+          {centros.length > 0 && (
             <>
               <div className="mb-6 px-4 py-3 bg-warning-container border border-warning rounded">
                 <p className="text-sm font-semibold text-on-warning-container">
